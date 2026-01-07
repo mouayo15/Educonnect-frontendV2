@@ -74,8 +74,23 @@ export default function StreakPopup({ isOpen, onClose, streakCount = 5, newAchie
         </>
       )}
 
+      {/* Streak Celebration - Toast style at center */}
+      {streakCount > 0 && (
+        <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-50">
+          <div className="animate-streakZoom bg-gradient-to-br from-orange-400 via-red-400 to-pink-400 rounded-3xl p-8 shadow-2xl border-4 border-white/50 backdrop-blur-sm max-w-sm w-10/12 text-center">
+            <div className="text-8xl mb-4 drop-shadow-lg">{getStreakIcon()}</div>
+            <div className="text-6xl font-black text-white drop-shadow-xl mb-2">
+              {streakCount}
+            </div>
+            <p className="text-2xl font-bold text-white drop-shadow-lg">
+              JOURS CONSÉCUTIFS !
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Main Popup - Centered modal window */}
-      <div className="relative z-10 bg-gradient-to-br from-white via-blue-50 to-purple-50 rounded-3xl p-6 sm:p-8 shadow-2xl max-w-sm w-11/12 sm:max-w-md animate-zoomIn border border-white/50 max-h-[85vh] overflow-y-auto">
+      <div className="relative z-10 bg-gradient-to-br from-white via-blue-50 to-purple-50 rounded-3xl p-8 shadow-2xl max-w-md w-11/12 animate-zoomIn border border-white/50 max-h-[90vh] overflow-y-auto">
         {/* Close button */}
         <button
           onClick={onClose}
@@ -83,21 +98,18 @@ export default function StreakPopup({ isOpen, onClose, streakCount = 5, newAchie
         >
           <X className="w-5 h-5 text-gray-500" />
         </button>
-
         {/* Celebrate emoji */}
         <div className="text-center mb-6">
           <div className="inline-block">
-            <div className="text-6xl sm:text-7xl mb-4 animate-bounce-slow">
+            <div className="text-7xl mb-4 animate-bounce-slow">
               {isPerfect ? '🎉' : isGreat ? '🌟' : '💫'}
             </div>
           </div>
         </div>
-
-        {/* Main message */}
-        <h1 className="text-2xl sm:text-3xl font-bold text-center text-gray-900 mb-2">
+        <h1 className="text-3xl font-bold text-center text-gray-900 mb-2">
           Quiz Complété !
         </h1>
-        <p className="text-center text-gray-600 mb-6 text-base sm:text-lg">
+        <p className="text-center text-gray-600 mb-6 text-lg">
           {getMotivationalMessage()}
         </p>
 
@@ -120,28 +132,6 @@ export default function StreakPopup({ isOpen, onClose, streakCount = 5, newAchie
             </div>
           </div>
         )}
-
-        {/* Streak section */}
-        <div className="bg-gradient-to-r from-orange-100 to-red-100 rounded-2xl p-5 mb-6 border-2 border-orange-200">
-          <div className="flex items-center justify-between mb-3">
-            <span className="flex items-center gap-2 text-gray-700 font-semibold">
-              <Flame className="w-5 h-5 text-orange-600" />
-              Streaks
-            </span>
-            <div className="text-3xl">{getStreakIcon()}</div>
-          </div>
-          <div className="text-center">
-            <div className="text-5xl font-bold text-orange-700 mb-2">
-              {streakCount}
-            </div>
-            <p className="text-xs sm:text-sm text-gray-700">
-              {streakCount === 1 && 'Tu commences un nouveau streak ! 🚀'}
-              {streakCount > 1 && streakCount < 5 && 'Continue comme ça ! 💪'}
-              {streakCount >= 5 && streakCount < 10 && 'Incroyable ! Tu es en feu ! 🔥'}
-              {streakCount >= 10 && 'LÉGENDAIRE ! Tu es un champion ! 👑'}
-            </p>
-          </div>
-        </div>
 
         {/* Achievement unlock */}
         {newAchievement && (
@@ -244,12 +234,30 @@ export default function StreakPopup({ isOpen, onClose, streakCount = 5, newAchie
           }
         }
 
+        @keyframes streakZoom {
+          0% {
+            transform: scale(0) rotate(-20deg);
+            opacity: 0;
+          }
+          50% {
+            transform: scale(1.2);
+          }
+          100% {
+            transform: scale(1);
+            opacity: 1;
+          }
+        }
+
         .animate-zoomIn {
           animation: zoomIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
         .animate-fadeIn {
           animation: fadeIn 0.4s ease-out;
+        }
+
+        .animate-streakZoom {
+          animation: streakZoom 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
         }
       `}</style>
     </div>

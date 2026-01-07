@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { AppNav } from './AppNav';
-import { ChevronRight, Play, CheckCircle, Lock, Star, Clock } from 'lucide-react';
+import { ChevronRight, Play, CheckCircle, Lock, Star, Clock, BookOpen } from 'lucide-react';
 
 export function CoursePage({ onNavigate, onLogout }) {
   const [selectedSubject, setSelectedSubject] = useState('math');
@@ -63,8 +63,11 @@ export function CoursePage({ onNavigate, onLogout }) {
       <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
         {/* Header */}
         <div className="mb-8 md:mb-10 transform transition-all duration-700">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-3">📚 Mes cours</h1>
-          <p className="text-gray-600 text-lg">Choisis une matière et commence à apprendre !</p>
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-gray-900 mb-3 flex items-center gap-3">
+            <BookOpen className="w-10 h-10 md:w-12 md:h-12 text-blue-600" />
+            My Lessons
+          </h1>
+          <p className="text-gray-700 text-lg font-bold">Choose a subject and start learning!</p>
         </div>
 
         {/* Subject Tabs */}

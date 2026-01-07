@@ -38,8 +38,11 @@ export function ProfilePage({ onNavigate, onLogout }) {
       <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
         {/* Header */}
         <div className={`mb-8 md:mb-10 transform transition-all duration-700 ${animateCards ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-3">👤 Mon profil</h1>
-          <p className="text-gray-600 text-lg">Consulte tes statistiques et tes badges</p>
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-gray-900 mb-3 flex items-center gap-3">
+            <User className="w-10 h-10 md:w-12 md:h-12 text-purple-600" />
+            My Profile
+          </h1>
+          <p className="text-gray-700 text-lg font-bold">View your stats and badges</p>
         </div>
 
         <div className="grid lg:grid-cols-3 gap-8">

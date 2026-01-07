@@ -1,15 +1,15 @@
-import { Home, BookOpen, FileEdit, Brain, User, LogOut } from 'lucide-react';
+import { Home, BookOpen, FileEdit, Brain, User, LogOut, Trophy } from 'lucide-react';
 import { useState } from 'react';
 
 export function AppNav({ currentPage, onNavigate, onLogout }) {
   const [hoverItem, setHoverItem] = useState(null);
 
   const navItems = [
-    { id: 'dashboard', icon: Home, label: '🏠 Tableau de bord', color: 'bg-blue-500' },
-    { id: 'cours', icon: BookOpen, label: '📚 Mes cours', color: 'bg-purple-500' },
-    { id: 'exercices', icon: FileEdit, label: '✏️ Exercices', color: 'bg-green-500' },
-    { id: 'quiz', icon: Brain, label: '🎯 Quiz', color: 'bg-orange-500' },
-    { id: 'profil', icon: User, label: '👤 Mon profil', color: 'bg-pink-500' },
+    { id: 'dashboard', icon: Home, label: '🏠 Home', color: 'bg-blue-500' },
+    { id: 'cours', icon: BookOpen, label: '📚 Lessons', color: 'bg-purple-500' },
+    { id: 'quiz', icon: Brain, label: '🎯 Quizzes', color: 'bg-orange-500' },
+    { id: 'leaderboard', icon: Trophy, label: '🏆 Leaderboard', color: 'bg-yellow-500' },
+    { id: 'profil', icon: User, label: '👤 Profile', color: 'bg-pink-500' },
   ];
 
   return (
@@ -21,7 +21,7 @@ export function AppNav({ currentPage, onNavigate, onLogout }) {
             <div className="bg-gray-900 p-2 rounded-lg group-hover:rotate-12 transition-transform duration-300">
               <BookOpen className="w-6 h-6 text-white" />
             </div>
-            <span className="text-xl font-bold text-gray-900">EduLearn</span>
+            <span className="text-xl font-black text-gray-900">Scolarix</span>
           </div>
 
           {/* Navigation */}
@@ -53,10 +53,10 @@ export function AppNav({ currentPage, onNavigate, onLogout }) {
           {/* Logout */}
           <button 
             onClick={onLogout}
-            className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-300 font-medium hover:shadow-md"
+            className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-300 font-bold hover:shadow-md"
           >
             <LogOut className="w-4 h-4 transition-transform duration-300 hover:rotate-180" />
-            <span className="hidden md:inline">Déconnexion</span>
+            <span className="hidden md:inline">Logout</span>
           </button>
         </div>
 

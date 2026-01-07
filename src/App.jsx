@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Toaster } from './components/ui/sonner';
 import { NotificationProvider } from './components/NotificationProvider';
+import { GameProvider } from './contexts/GameContext';
 import { LandingPage } from './components/LandingPage';
 import { Login } from './components/Login';
 import { Register } from './components/Register';
@@ -9,6 +10,7 @@ import { CoursePage } from './components/CoursePage';
 import { ExercisePage } from './components/ExercisePage';
 import { QuizPage } from './components/QuizPage';
 import { ProfilePage } from './components/ProfilePage';
+import { LeaderboardPage } from './components/LeaderboardPage';
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState('dashboard');
@@ -49,15 +51,18 @@ export default function App() {
 
   // Main app for logged in users
   return (
-    <NotificationProvider>
-      <Toaster position="top-right" />
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
-        {currentPage === 'dashboard' && <Dashboard onNavigate={handleNavigate} onLogout={handleLogout} />}
-        {currentPage === 'cours' && <CoursePage onNavigate={handleNavigate} onLogout={handleLogout} />}
-        {currentPage === 'exercices' && <ExercisePage onNavigate={handleNavigate} onLogout={handleLogout} />}
-        {currentPage === 'quiz' && <QuizPage onNavigate={handleNavigate} onLogout={handleLogout} />}
-        {currentPage === 'profil' && <ProfilePage onNavigate={handleNavigate} onLogout={handleLogout} />}
-      </div>
-    </NotificationProvider>
+    <GameProvider>
+      <NotificationProvider>
+        <Toaster position="top-right" />
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
+          {currentPage === 'dashboard' && <Dashboard onNavigate={handleNavigate} onLogout={handleLogout} />}
+          {currentPage === 'cours' && <CoursePage onNavigate={handleNavigate} onLogout={handleLogout} />}
+          {currentPage === 'exercices' && <ExercisePage onNavigate={handleNavigate} onLogout={handleLogout} />}
+          {currentPage === 'quiz' && <QuizPage onNavigate={handleNavigate} onLogout={handleLogout} />}
+          {currentPage === 'leaderboard' && <LeaderboardPage onNavigate={handleNavigate} onLogout={handleLogout} />}
+          {currentPage === 'profil' && <ProfilePage onNavigate={handleNavigate} onLogout={handleLogout} />}
+        </div>
+      </NotificationProvider>
+    </GameProvider>
   );
 }

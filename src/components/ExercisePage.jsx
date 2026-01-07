@@ -110,8 +110,11 @@ export function ExercisePage({ onNavigate, onLogout }) {
       <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
         {/* Header */}
         <div className="mb-8 md:mb-10 animate-fadeInDown">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-3">✏️ Exercices de Mathématiques</h1>
-          <p className="text-gray-600 text-lg">Réponds aux questions pour progresser !</p>
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-gray-900 mb-3 flex items-center gap-3\">
+            <Check className="w-10 h-10 md:w-12 md:h-12 text-green-600" />
+            Practice Arena
+          </h1>
+          <p className="text-gray-700 text-lg font-bold">Train your skills!</p>
         </div>
 
         {/* Progress Bar */}
