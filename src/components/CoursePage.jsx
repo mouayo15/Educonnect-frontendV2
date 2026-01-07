@@ -1,10 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AppNav } from './AppNav';
 import { ChevronRight, Play, CheckCircle, Lock, Star, Clock } from 'lucide-react';
 
 export function CoursePage({ onNavigate, onLogout }) {
   const [selectedSubject, setSelectedSubject] = useState('math');
   const [selectedChapter, setSelectedChapter] = useState(null);
+  const [animateCards, setAnimateCards] = useState(false);
+
+  useEffect(() => {
+    setAnimateCards(true);
+  }, [selectedChapter]);
 
   const subjects = [
     { id: 'math', name: 'Mathématiques', emoji: '🔢', color: 'bg-blue-500' },
@@ -55,29 +60,33 @@ export function CoursePage({ onNavigate, onLogout }) {
     <div className="min-h-screen">
       <AppNav currentPage="cours" onNavigate={onNavigate} onLogout={onLogout} />
       
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl text-gray-900 mb-2">📚 Mes cours</h1>
-          <p className="text-gray-600">Choisis une matière et commence à apprendre !</p>
+        <div className="mb-8 md:mb-10 transform transition-all duration-700">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-3">📚 Mes cours</h1>
+          <p className="text-gray-600 text-lg">Choisis une matière et commence à apprendre !</p>
         </div>
 
         {/* Subject Tabs */}
-        <div className="flex gap-3 mb-8 overflow-x-auto pb-2">
-          {subjects.map((subject) => (
+        <div className="flex gap-3 mb-8 overflow-x-auto pb-2 scroll-smooth">
+          {subjects.map((subject, index) => (
             <button
               key={subject.id}
               onClick={() => {
                 setSelectedSubject(subject.id);
                 setSelectedChapter(null);
               }}
-              className={`flex-shrink-0 flex items-center gap-3 px-6 py-4 rounded-2xl transition-all ${
+              className={`flex-shrink-0 flex items-center gap-3 px-6 py-4 rounded-2xl transition-all duration-300 font-semibold ${
                 selectedSubject === subject.id
-                  ? `${subject.color} text-white shadow-lg scale-105`
-                  : 'bg-white text-gray-700 hover:shadow-md'
+                  ? `${subject.color} text-white shadow-lg scale-105 hover:shadow-xl`
+                  : 'bg-white text-gray-700 hover:shadow-md hover:scale-102'
               }`}
+              style={{
+                animation: 'fadeInDown 0.6s ease-out',
+                animationDelay: `${index * 50}ms`,
+              }}
             >
-              <span className="text-2xl">{subject.emoji}</span>
+              <span className="text-2xl animate-float" style={{ animationDelay: `${index * 0.1}s` }}>{subject.emoji}</span>
               <span>{subject.name}</span>
             </button>
           ))}
@@ -85,38 +94,42 @@ export function CoursePage({ onNavigate, onLogout }) {
 
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Chapters List */}
-          <div className="lg:col-span-1 space-y-4">
-            <h2 className="text-xl text-gray-900 mb-4">📑 Chapitres</h2>
-            {currentChapters.map((chapter) => (
+          <div className="lg:col-span-1 space-y-4 animate-slideInLeft">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">📑 Chapitres</h2>
+            {currentChapters.map((chapter, index) => (
               <button
                 key={chapter.id}
                 onClick={() => setSelectedChapter(chapter.id)}
-                className={`w-full text-left p-5 rounded-2xl transition-all ${
+                className={`w-full text-left p-5 rounded-2xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg ${
                   selectedChapter === chapter.id
-                    ? 'bg-gradient-to-br from-blue-500 to-purple-600 text-white shadow-lg'
+                    ? 'bg-gradient-to-br from-blue-500 to-purple-600 text-white shadow-xl scale-105'
                     : 'bg-white hover:shadow-md'
                 }`}
+                style={{
+                  animation: 'fadeInUp 0.6s ease-out',
+                  animationDelay: `${index * 100}ms`,
+                }}
               >
                 <div className="flex items-start justify-between mb-3">
-                  <h3 className={selectedChapter === chapter.id ? 'text-white' : 'text-gray-900'}>
+                  <h3 className={`font-semibold ${selectedChapter === chapter.id ? 'text-white' : 'text-gray-900'}`}>
                     {chapter.title}
                   </h3>
-                  <ChevronRight className={`w-5 h-5 ${selectedChapter === chapter.id ? 'text-white' : 'text-gray-400'}`} />
+                  <ChevronRight className={`w-5 h-5 transition-transform duration-300 ${selectedChapter === chapter.id ? 'text-white translate-x-1' : 'text-gray-400'}`} />
                 </div>
                 
                 <div className="flex items-center gap-2 mb-2">
-                  <span className={`text-sm ${selectedChapter === chapter.id ? 'text-white' : 'text-gray-600'}`}>
+                  <span className={`text-sm font-semibold ${selectedChapter === chapter.id ? 'text-white' : 'text-gray-600'}`}>
                     {chapter.lessons.length} leçons
                   </span>
                 </div>
                 
                 <div className="w-full bg-white/20 rounded-full h-2 overflow-hidden">
                   <div
-                    className={`h-full rounded-full ${selectedChapter === chapter.id ? 'bg-white' : 'bg-blue-500'}`}
+                    className={`h-full rounded-full transition-all duration-500 ${selectedChapter === chapter.id ? 'bg-white' : 'bg-blue-500'}`}
                     style={{ width: `${chapter.progress}%` }}
                   ></div>
                 </div>
-                <span className={`text-xs mt-1 block ${selectedChapter === chapter.id ? 'text-white' : 'text-gray-500'}`}>
+                <span className={`text-xs mt-1 block font-medium ${selectedChapter === chapter.id ? 'text-white' : 'text-gray-500'}`}>
                   {chapter.progress}% complété
                 </span>
               </button>
@@ -126,9 +139,11 @@ export function CoursePage({ onNavigate, onLogout }) {
           {/* Lessons Detail */}
           <div className="lg:col-span-2">
             {selectedChapter ? (
-              <div className="bg-white rounded-2xl p-6 shadow-sm">
+              <div className={`bg-white rounded-2xl p-6 shadow-sm hover:shadow-lg transition-all duration-300 animate-slideInRight ${
+                animateCards ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-8'
+              }`}>
                 <div className="mb-6">
-                  <h2 className="text-2xl text-gray-900 mb-2">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-2">
                     {currentChapters.find(c => c.id === selectedChapter)?.title}
                   </h2>
                   <p className="text-gray-600">
@@ -140,57 +155,61 @@ export function CoursePage({ onNavigate, onLogout }) {
                   {currentChapters.find(c => c.id === selectedChapter)?.lessons.map((lesson, index) => (
                     <div
                       key={index}
-                      className={`p-5 rounded-xl border-2 transition-all ${
+                      className={`p-5 rounded-xl border-2 transition-all duration-300 transform hover:scale-102 hover:shadow-lg ${
                         lesson.locked
                           ? 'border-gray-200 bg-gray-50 opacity-60'
                           : lesson.completed
-                          ? 'border-green-200 bg-green-50 hover:shadow-md cursor-pointer'
-                          : 'border-blue-200 bg-blue-50 hover:shadow-md cursor-pointer'
+                          ? 'border-green-200 bg-green-50 hover:shadow-md cursor-pointer hover:bg-green-100'
+                          : 'border-blue-200 bg-blue-50 hover:shadow-md cursor-pointer hover:bg-blue-100'
                       }`}
+                      style={{
+                        animation: 'fadeInUp 0.6s ease-out',
+                        animationDelay: `${index * 50}ms`,
+                      }}
                     >
                       <div className="flex items-center gap-4">
-                        <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                        <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-transform duration-300 hover:scale-125 ${
                           lesson.locked
                             ? 'bg-gray-300'
                             : lesson.completed
-                            ? 'bg-green-500'
-                            : 'bg-blue-500'
+                            ? 'bg-gradient-to-br from-green-400 to-green-600'
+                            : 'bg-gradient-to-br from-blue-400 to-blue-600'
                         }`}>
                           {lesson.locked ? (
                             <Lock className="w-6 h-6 text-white" />
                           ) : lesson.completed ? (
-                            <CheckCircle className="w-6 h-6 text-white" />
+                            <CheckCircle className="w-6 h-6 text-white animate-bounce-slow" />
                           ) : (
                             <Play className="w-6 h-6 text-white" />
                           )}
                         </div>
                         
                         <div className="flex-1">
-                          <h4 className="text-gray-900 mb-1">{lesson.title}</h4>
+                          <h4 className="text-gray-900 font-semibold mb-1">{lesson.title}</h4>
                           <div className="flex items-center gap-3 text-sm text-gray-600">
-                            <span className="flex items-center gap-1">
+                            <span className="flex items-center gap-1 font-medium">
                               <Clock className="w-4 h-4" />
                               {lesson.duration}
                             </span>
                             {lesson.completed && (
-                              <span className="flex items-center gap-1 text-green-600">
+                              <span className="flex items-center gap-1 text-green-600 font-semibold">
                                 <Star className="w-4 h-4 fill-green-600" />
                                 Terminé
                               </span>
                             )}
                             {lesson.locked && (
-                              <span className="text-gray-500">🔒 Bloqué</span>
+                              <span className="text-gray-500 font-semibold">🔒 Bloqué</span>
                             )}
                           </div>
                         </div>
 
                         {!lesson.locked && (
-                          <button className={`px-4 py-2 rounded-lg transition-colors ${
+                          <button className={`px-4 py-2 rounded-lg transition-all duration-300 font-semibold transform hover:scale-105 hover:shadow-md ${
                             lesson.completed
-                              ? 'bg-green-500 text-white hover:bg-green-600'
-                              : 'bg-blue-500 text-white hover:bg-blue-600'
+                              ? 'bg-gradient-to-r from-green-500 to-green-600 text-white hover:shadow-lg'
+                              : 'bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:shadow-lg'
                           }`}>
-                            {lesson.completed ? 'Revoir' : 'Commencer'}
+                            {lesson.completed ? '👀 Revoir' : '▶️ Commencer'}
                           </button>
                         )}
                       </div>
@@ -199,10 +218,10 @@ export function CoursePage({ onNavigate, onLogout }) {
                 </div>
 
                 {/* Chapter Summary */}
-                <div className="mt-6 p-5 bg-gradient-to-br from-purple-100 to-pink-100 rounded-xl">
+                <div className="mt-6 p-5 bg-gradient-to-br from-purple-100 to-pink-100 rounded-xl hover:shadow-lg transition-all duration-300 transform hover:scale-102">
                   <div className="flex items-center gap-3 mb-3">
-                    <span className="text-2xl">💡</span>
-                    <h3 className="text-gray-900">Astuce</h3>
+                    <span className="text-2xl animate-bounce-slow">💡</span>
+                    <h3 className="text-gray-900 font-bold">Astuce</h3>
                   </div>
                   <p className="text-gray-700">
                     N'oublie pas de faire les exercices après chaque leçon pour bien comprendre ! 
@@ -211,9 +230,9 @@ export function CoursePage({ onNavigate, onLogout }) {
                 </div>
               </div>
             ) : (
-              <div className="bg-white rounded-2xl p-12 shadow-sm text-center">
-                <div className="text-6xl mb-4">📚</div>
-                <h3 className="text-xl text-gray-900 mb-2">Choisis un chapitre</h3>
+              <div className="bg-white rounded-2xl p-12 shadow-sm text-center animate-scaleIn">
+                <div className="text-6xl mb-4 animate-float">📚</div>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">Choisis un chapitre</h3>
                 <p className="text-gray-600">
                   Sélectionne un chapitre sur la gauche pour voir toutes les leçons
                 </p>
