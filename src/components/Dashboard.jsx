@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ChevronRight, Zap, Trophy, Target, Flame, BookOpen, Brain } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { useNotification } from './NotificationProvider';
 import { useGame } from '../contexts/GameContext';
 import LevelUpPopup from './LevelUpPopup';
@@ -16,6 +17,23 @@ export function Dashboard({ onNavigate, onLogout }) {
     updateStreak();
     notification.success(`Welcome back, ${player.username}!`, { description: 'Ready to level up today? 🚀' });
   }, [notification, player.username, updateStreak]);
+
+  // map tailwind-like color tokens to explicit CSS gradients as a reliable fallback
+  const gradientMap = {
+    'from-amber-400 to-orange-500': 'linear-gradient(135deg,#f59e0b,#f97316)',
+    'from-sky-500 to-indigo-500': 'linear-gradient(135deg,#0ea5e9,#6366f1)',
+    'from-emerald-400 to-teal-500': 'linear-gradient(135deg,#34d399,#14b8a6)',
+    'from-violet-500 to-fuchsia-500': 'linear-gradient(135deg,#8b5cf6,#f472b6)'
+  };
+
+  function AnimatedEmoji({ symbol }) {
+    // return a decorated element for known symbols
+    if (symbol === '🔥') return <span className="emoji-fire" aria-hidden>{symbol}</span>;
+    if (symbol === '⚡') return <span className="emoji-lightning" aria-hidden>{symbol}</span>;
+    if (symbol === '🎯') return <span className="emoji-target" aria-hidden>{symbol}</span>;
+    if (symbol === '🏆') return <span className="emoji-trophy" aria-hidden>{symbol}</span>;
+    return <span>{symbol}</span>;
+  }
 
   const subjects = [
     { name: 'Mathématiques', progress: 75, color: 'bg-blue-500', emoji: '🔢', lessons: 12, exercises: 8 },
@@ -88,19 +106,25 @@ export function Dashboard({ onNavigate, onLogout }) {
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mb-8 md:mb-12">
           {[
-            { emoji: '🔥', value: player.streak, label: "Day Streak", color: 'from-orange-500 to-red-500', delay: 0 },
-            { emoji: '⚡', value: player.xp, label: 'Total XP', color: 'from-yellow-400 to-orange-500', delay: 1 },
-            { emoji: '🎯', value: player.completedQuizzes.length, label: 'Quizzes Won', color: 'from-blue-500 to-indigo-600', delay: 2 },
-            { emoji: '🏆', value: player.level, label: 'Level', color: 'from-purple-500 to-pink-500', delay: 3 },
+            { emoji: '🔥', value: player.streak, label: "Day Streak", color: 'from-amber-400 to-orange-500', delay: 0 },
+            { emoji: '⚡', value: player.xp, label: 'Total XP', color: 'from-sky-500 to-indigo-500', delay: 1 },
+            { emoji: '🎯', value: player.completedQuizzes.length, label: 'Quizzes Won', color: 'from-emerald-400 to-teal-500', delay: 2 },
+            { emoji: '🏆', value: player.level, label: 'Level', color: 'from-violet-500 to-fuchsia-500', delay: 3 },
           ].map((stat, index) => (
             <div
               key={index}
-              className={`bg-gradient-to-br ${stat.color} rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-6 text-white shadow-lg hover:shadow-2xl transform transition-all duration-500 hover:scale-110 cursor-pointer border-2 border-white/20 ${
+              className={`rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-6 text-white shadow-lg hover:shadow-2xl transform transition-all duration-500 hover:scale-110 cursor-pointer border border-white/10 ${
                 animateCards ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
               }`}
-              style={{ transitionDelay: `${stat.delay * 100}ms` }}
+              style={{ backgroundImage: gradientMap[stat.color], transitionDelay: `${stat.delay * 100}ms` }}
             >
-              <div className="text-3xl sm:text-4xl mb-2 animate-bounce-slow">{stat.emoji}</div>
+              <motion.div
+                className="text-3xl sm:text-4xl mb-2"
+                animate={{ y: [0, -8, 0], rotate: [0, 6, -6, 0], scale: [1, 1.06, 1] }}
+                transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut', delay: index * 0.12 }}
+              >
+                <AnimatedEmoji symbol={stat.emoji} />
+              </motion.div>
               <div className="text-2xl sm:text-3xl md:text-4xl font-black mb-1 text-white drop-shadow-lg">{stat.value}</div>
               <div className="text-white drop-shadow-md text-xs sm:text-sm font-bold">{stat.label}</div>
             </div>
@@ -188,9 +212,7 @@ export function Dashboard({ onNavigate, onLogout }) {
                     key={index}
                     className="flex items-start gap-4 p-4 bg-gray-50 rounded-xl hover:bg-blue-50 transition-all duration-300 cursor-pointer hover:translate-x-1 hover:shadow-md transform"
                   >
-                    <div className="text-3xl animate-float" style={{ animationDelay: `${index * 0.1}s` }}>
-                      {activity.emoji}
-                    </div>
+                    <motion.div className="text-3xl" animate={{ y: [0, -6, 0], rotate: [0, 8, -8, 0] }} transition={{ duration: 1.6, repeat: Infinity, delay: index * 0.12 }}>{activity.emoji}</motion.div>
                     <div className="flex-1">
                       <div className="text-gray-900 font-semibold">{activity.title}</div>
                       <div className="text-sm text-gray-600 mt-1">{activity.subject} • {activity.type}</div>
@@ -246,13 +268,9 @@ export function Dashboard({ onNavigate, onLogout }) {
                     }`}
                     style={{
                       transitionDelay: `${index * 50}ms`,
-                      animation: achievement.unlocked ? 'fadeInUp 0.5s ease-out forwards' : 'none',
-                      animationDelay: `${0.5 + index * 0.1}s`,
                     }}
                   >
-                    <div className="text-3xl mb-2 animate-float" style={{ animationDelay: `${index * 0.1}s` }}>
-                      {achievement.emoji}
-                    </div>
+                    <motion.div className="text-3xl mb-2" animate={{ y: [0, -7, 0], rotate: [0, 6, -6, 0], scale: [1, 1.06, 1] }} transition={{ duration: 1.8, repeat: Infinity, delay: index * 0.08 }}>{achievement.emoji}</motion.div>
                     <div className="text-xs font-semibold">{achievement.title}</div>
                   </div>
                 ))}
