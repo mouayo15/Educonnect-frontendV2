@@ -1,28 +1,41 @@
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { ArrowRight, Play } from 'lucide-react';
+import { motion } from 'framer-motion';
+
+const container = {
+  hidden: {},
+  visible: {
+    transition: { staggerChildren: 0.08 }
+  }
+};
+
+const itemUp = {
+  hidden: { opacity: 0, y: 18 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: 'easeOut' } }
+};
 
 export function Hero({ onGetStarted }) {
   return (
-    <section className="relative overflow-hidden">
+    <motion.section className="relative overflow-hidden" initial="hidden" whileInView="visible" viewport={{ once: true }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
+        <motion.div className="grid lg:grid-cols-2 gap-12 items-center" variants={container}>
           {/* Left Content */}
-          <div className="space-y-8">
+          <motion.div className="space-y-8" variants={itemUp}>
             <div className="inline-block">
               <span className="px-4 py-2 bg-blue-100 text-blue-700 rounded-full">
                 Plateforme éducative #1 en France
               </span>
             </div>
             
-            <h1 className="text-gray-900">
+            <motion.h1 className="text-gray-900" variants={itemUp}>
               Réussis ton année scolaire avec confiance
-            </h1>
+            </motion.h1>
             
-            <p className="text-gray-600 text-lg">
+            <motion.p className="text-gray-600 text-lg" variants={itemUp}>
               Des cours détaillés, des exercices corrigés et des quiz interactifs pour tous les niveaux du collège au lycée. Révise efficacement avec nos milliers de ressources pédagogiques.
-            </p>
+            </motion.p>
 
-            <div className="flex flex-wrap gap-4">
+            <motion.div className="flex flex-wrap gap-4" variants={itemUp}>
               <button 
                 onClick={onGetStarted}
                 className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:shadow-xl transition-shadow"
@@ -34,10 +47,10 @@ export function Hero({ onGetStarted }) {
                 <Play className="w-5 h-5" />
                 Voir la démo
               </button>
-            </div>
+            </motion.div>
 
             {/* Trust badges */}
-            <div className="flex flex-wrap gap-8 pt-8 border-t border-gray-200">
+            <motion.div className="flex flex-wrap gap-8 pt-8 border-t border-gray-200" variants={itemUp}>
               <div>
                 <div className="text-2xl text-gray-900">500K+</div>
                 <div className="text-sm text-gray-600">Élèves actifs</div>
@@ -50,19 +63,19 @@ export function Hero({ onGetStarted }) {
                 <div className="text-2xl text-gray-900">98%</div>
                 <div className="text-sm text-gray-600">Satisfaction</div>
               </div>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
 
           {/* Right Image */}
-          <div className="relative">
-            <div className="relative rounded-2xl overflow-hidden shadow-2xl">
+          <motion.div className="relative" variants={itemUp}>
+            <motion.div className="relative rounded-2xl overflow-hidden shadow-2xl" whileHover={{ scale: 1.02 }} transition={{ type: 'spring', stiffness: 200 }}>
               <ImageWithFallback
                 src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzdHVkZW50cyUyMHN0dWR5aW5nfGVufDF8fHx8MTc2NzYwMzkzNXww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral"
                 alt="Étudiants en train d'étudier"
                 className="w-full h-[500px] object-cover"
               />
               {/* Floating card */}
-              <div className="absolute bottom-6 left-6 right-6 bg-white/95 backdrop-blur-sm p-6 rounded-xl shadow-lg">
+              <motion.div className="absolute bottom-6 left-6 right-6 bg-white/95 backdrop-blur-sm p-6 rounded-xl shadow-lg" initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1, transition: { delay: 0.25, duration: 0.45 } }}>
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
                     <span className="text-2xl">✓</span>
@@ -72,14 +85,14 @@ export function Hero({ onGetStarted }) {
                     <div className="text-gray-900">+47% en Mathématiques</div>
                   </div>
                 </div>
-              </div>
-            </div>
+              </motion.div>
+            </motion.div>
             {/* Decorative elements */}
             <div className="absolute -top-4 -right-4 w-72 h-72 bg-purple-200 rounded-full opacity-20 blur-3xl -z-10"></div>
             <div className="absolute -bottom-8 -left-8 w-96 h-96 bg-blue-200 rounded-full opacity-20 blur-3xl -z-10"></div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       </div>
-    </section>
+    </motion.section>
   );
 }

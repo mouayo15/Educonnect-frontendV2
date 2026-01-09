@@ -1,116 +1,74 @@
 import { useEffect, useState } from 'react';
 import { X, Zap, Trophy, Star, Sparkles } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { modalVariant, backdropVariant, confettiFall } from '../lib/motionVariants';
 
 export default function LevelUpPopup({ isOpen, onClose, levelUpData }) {
   const [showConfetti, setShowConfetti] = useState(false);
-  const [animate, setAnimate] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
       setShowConfetti(true);
-      setAnimate(true);
-      
-      const timer = setTimeout(() => setShowConfetti(false), 2000);
+      const t = setTimeout(() => setShowConfetti(false), 1800);
       return () => {
-        clearTimeout(timer);
+        clearTimeout(t);
         document.body.style.overflow = 'auto';
       };
-    } else {
-      document.body.style.overflow = 'auto';
-      setAnimate(false);
     }
   }, [isOpen]);
 
-  if (!isOpen || !levelUpData) return null;
+  if (!levelUpData) return null;
 
   const { oldLevel, newLevel, leagueChanged, newLeague } = levelUpData;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div 
-        className="fixed inset-0 bg-black/70 backdrop-blur-md animate-fadeIn"
-        onClick={onClose}
-      />
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div className="fixed inset-0 z-50 flex items-center justify-center" initial="hidden" animate="visible" exit="exit">
+          <motion.div className="fixed inset-0 bg-black/70 backdrop-blur-md" variants={backdropVariant} onClick={onClose} />
 
-      {showConfetti && (
-        <>
-          {[...Array(30)].map((_, i) => (
-            <div
-              key={i}
-              className="absolute pointer-events-none text-2xl"
-              style={{
-                left: Math.random() * 100 + '%',
-                top: -20,
-                animation: `fall ${2 + Math.random() * 2}s linear forwards`,
-              }}
-            >
-              {['⭐', '🎉', '✨', '🏆', '💫', '🌟'][Math.floor(Math.random() * 6)]}
+          {showConfetti && [...Array(24)].map((_, i) => {
+            const left = Math.random() * 100;
+            const rot = Math.random() * 640;
+            return (
+              <motion.div key={i} className="absolute text-2xl pointer-events-none" style={{ left: `${left}%`, top: -20 }} variants={confettiFall(left, rot, i * 0.02)} initial="hidden" animate="visible">{['⭐','🎉','✨','🏆'][Math.floor(Math.random()*4)]}</motion.div>
+            );
+          })}
+
+          <motion.div className="relative z-50 max-w-md w-11/12" variants={modalVariant} initial="hidden" animate="visible" exit="exit">
+            <div className="bg-gradient-to-br from-yellow-400 via-orange-400 to-red-500 rounded-3xl p-6 shadow-2xl border-4 border-yellow-300">
+              <button onClick={onClose} className="absolute top-4 right-4 p-2 hover:bg-white/20 rounded-full transition-colors"><X className="w-5 h-5 text-white" /></button>
+              <div className="text-center">
+                <div className="text-7xl mb-3">🎉</div>
+                <h1 className="text-3xl font-extrabold text-white mb-2">LEVEL UP!</h1>
+
+                <div className="flex items-center justify-center gap-4 my-4">
+                  <div className="text-4xl text-white/60">{oldLevel}</div>
+                  <Zap className="w-10 h-10 text-white" />
+                  <div className="text-5xl font-extrabold text-white">{newLevel}</div>
+                </div>
+
+                {leagueChanged && newLeague && (
+                  <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-4 mb-4">
+                    <div className="flex items-center justify-center gap-3">
+                      <Trophy className="w-6 h-6 text-yellow-200" />
+                      <h2 className="text-xl font-bold text-white">{newLeague.name} League</h2>
+                    </div>
+                  </div>
+                )}
+
+                <div className="mb-4">
+                  <div className="bg-white/20 rounded-xl p-3 flex items-center justify-center gap-2 text-white font-bold"> <Sparkles className="w-4 h-4" /> New abilities unlocked!</div>
+                </div>
+
+                <button onClick={onClose} className="w-full py-3 bg-white text-orange-600 rounded-xl font-bold">Continue Playing!</button>
+                <p className="text-white/80 text-sm mt-3">Keep going to reach the next league 🚀</p>
+              </div>
             </div>
-          ))}
-        </>
+          </motion.div>
+        </motion.div>
       )}
-
-      <div className={`relative z-10 bg-gradient-to-br from-yellow-400 via-orange-400 to-red-500 rounded-3xl p-8 shadow-2xl max-w-md w-11/12 border-4 border-yellow-300 transform transition-all duration-500 ${animate ? 'scale-100 rotate-0' : 'scale-50 rotate-12'}`}>
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 p-2 hover:bg-white/20 rounded-full transition-colors"
-        >
-          <X className="w-5 h-5 text-white" />
-        </button>
-
-        <div className="text-center">
-          <div className="text-8xl mb-4 animate-bounce">
-            🎉
-          </div>
-
-          <h1 className="text-4xl font-black text-white mb-2 drop-shadow-lg">
-            LEVEL UP!
-          </h1>
-
-          <div className="flex items-center justify-center gap-4 my-6">
-            <div className="text-6xl font-black text-white/50">
-              {oldLevel}
-            </div>
-            <Zap className="w-12 h-12 text-white animate-pulse" />
-            <div className="text-7xl font-black text-white drop-shadow-2xl animate-pulse">
-              {newLevel}
-            </div>
-          </div>
-
-          {leagueChanged && newLeague && (
-            <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-6 mb-6 border-2 border-white/50">
-              <div className="flex items-center justify-center gap-3 mb-3">
-                <Trophy className="w-8 h-8 text-yellow-200 animate-bounce" />
-                <h2 className="text-2xl font-bold text-white">New League!</h2>
-              </div>
-              <div className="text-6xl mb-2 animate-bounce-slow">
-                {newLeague.icon}
-              </div>
-              <p className="text-xl font-bold text-white">{newLeague.name} League</p>
-            </div>
-          )}
-
-          <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 mb-6">
-            <div className="flex items-center justify-center gap-2 text-white">
-              <Sparkles className="w-5 h-5 animate-spin" />
-              <span className="font-bold text-lg">New abilities unlocked!</span>
-            </div>
-          </div>
-
-          <button
-            onClick={onClose}
-            className="w-full py-4 bg-white text-orange-600 rounded-xl hover:bg-yellow-50 transition-all font-black text-lg shadow-lg hover:shadow-2xl transform hover:scale-105 flex items-center justify-center gap-2"
-          >
-            <Star className="w-6 h-6" />
-            Continue Playing!
-          </button>
-
-          <p className="text-white/80 text-sm mt-4">
-            Keep going to reach {newLeague?.name || 'the next'} league! 🚀
-          </p>
-        </div>
-      </div>
-    </div>
+    </AnimatePresence>
   );
 }

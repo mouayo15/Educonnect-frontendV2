@@ -1,8 +1,19 @@
 import { BookOpen, Menu, Search, User } from 'lucide-react';
+import { motion } from 'framer-motion';
+
+const headerVariant = {
+  hidden: { y: -20, opacity: 0 },
+  visible: { y: 0, opacity: 1, transition: { duration: 0.45, ease: 'easeOut' } }
+};
 
 export function Header({ onGetStarted }) {
   return (
-    <header className="bg-white shadow-sm sticky top-0 z-50">
+    <motion.header
+      className="bg-white shadow-sm sticky top-0 z-50"
+      initial="hidden"
+      animate="visible"
+      variants={headerVariant}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
@@ -53,6 +64,6 @@ export function Header({ onGetStarted }) {
           </div>
         </div>
       </div>
-    </header>
+    </motion.header>
   );
 }
