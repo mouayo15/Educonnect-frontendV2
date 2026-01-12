@@ -1,4 +1,4 @@
-import { Home, BookOpen, FileEdit, Brain, User, LogOut, Trophy } from 'lucide-react';
+import {BookOpen, LogOut } from 'lucide-react';
 import { useState } from 'react';
 import api from '../lib/api';
 import { useNotification } from './NotificationProvider';
@@ -7,11 +7,11 @@ export function AppNav({ currentPage, onNavigate, onLogout }) {
   const [hoverItem, setHoverItem] = useState(null);
 
   const navItems = [
-    { id: 'dashboard', icon: Home, label: '🏠 Home', color: 'bg-blue-500' },
-    { id: 'cours', icon: BookOpen, label: '📚 Lessons', color: 'bg-purple-500' },
-    { id: 'quiz', icon: Brain, label: '🎯 Quizzes', color: 'bg-orange-500' },
-    { id: 'leaderboard', icon: Trophy, label: '🏆 Leaderboard', color: 'bg-yellow-500' },
-    { id: 'profil', icon: User, label: '👤 Profile', color: 'bg-pink-500' },
+    { id: 'dashboard', label: '🏠 Home', color: 'bg-blue-500' },
+    { id: 'cours', label: '📚 Lessons', color: 'bg-purple-500' },
+    { id: 'quiz', label: '🎯 Quizzes', color: 'bg-orange-500' },
+    { id: 'leaderboard', label: '🏆 Leaderboard', color: 'bg-yellow-500' },
+    { id: 'profil', label: '👤 Profile', color: 'bg-pink-500' },
   ];
 
   const notification = useNotification();
@@ -59,7 +59,8 @@ export function AppNav({ currentPage, onNavigate, onLogout }) {
                   animation: currentPage === item.id ? 'none' : 'none'
                 }}
               >
-                <item.icon className={`w-4 h-4 transition-transform duration-300 ${hoverItem === item.id ? 'scale-125' : ''}`} />
+                {item.icon && (<item.icon className={`w-4 h-4 transition-transform duration-300 ${hoverItem === item.id ? 'scale-125' : ''}`} />)}
+
                 <span className="hidden lg:inline font-medium">{item.label}</span>
                 {currentPage === item.id && (
                   <div className="absolute bottom-0 left-2 right-2 h-0.5 bg-blue-600 rounded-full"></div>
