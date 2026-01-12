@@ -236,12 +236,12 @@ export function QuizPage({ onNavigate, onLogout }) {
                           animationDelay: `${index * 50}ms`,
                         }}
                       >
-                        <div className={`bg-gradient-to-br ${quiz.color} p-5 sm:p-6 text-white relative overflow-hidden group`}>
+                        <div className={`bg-gradient-to-br ${quiz.color} p-5 sm:p-6 text-gray-900 relative overflow-hidden group`}>
                           <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                           <div className="relative">
                             <div className="text-4xl sm:text-5xl mb-2 sm:mb-3 group-hover:scale-125 transition-transform duration-300 origin-left">{quiz.emoji}</div>
                             <h3 className="text-base sm:text-lg font-semibold mb-1 sm:mb-2">{quiz.title}</h3>
-                            <p className="text-xs sm:text-sm text-white/80">{quiz.subject}</p>
+                            <p className="text-xs sm:text-sm text-gray-900/80">{quiz.subject}</p>
                           </div>
 
                           {isCompleted && (

@@ -129,7 +129,7 @@ export function CoursePage({ onNavigate, onLogout }) {
               }}
               className={`flex-shrink-0 flex items-center gap-3 px-6 py-4 rounded-2xl transition-all duration-300 font-semibold ${
                 selectedSubject === subject.id
-                  ? `${subject.color} text-white shadow-lg scale-105 hover:shadow-xl`
+                  ? `${subject.color} text-gray-900 shadow-lg scale-105 hover:shadow-xl`
                   : 'bg-white text-gray-700 hover:shadow-md hover:scale-102'
               }`}
               style={{
