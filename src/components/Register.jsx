@@ -20,8 +20,16 @@ export function Register({ onRegister, onSwitchToLogin }) {
     setError('');
 
     // Validation
-    if (formData.password.length < 6) {
-      setError('Le mot de passe doit contenir au moins 6 caractères');
+    if (formData.password.length < 8) {
+      setError('Le mot de passe doit contenir au moins 8 caractères');
+      setIsLoading(false);
+      return;
+    }
+
+    // Check password complexity
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/;
+    if (!passwordRegex.test(formData.password)) {
+      setError('Le mot de passe doit contenir au moins une majuscule, une minuscule et un chiffre');
       setIsLoading(false);
       return;
     }
@@ -136,7 +144,7 @@ export function Register({ onRegister, onSwitchToLogin }) {
                 className="w-full pl-14 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 placeholder="••••••••"
                 required
-                minLength={6}
+                minLength={8}
               />
               <button
                 type="button"
@@ -146,7 +154,7 @@ export function Register({ onRegister, onSwitchToLogin }) {
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
             </div>
-            <p className="mt-1 text-xs text-gray-500">Au moins 6 caractères</p>
+            <p className="mt-1 text-xs text-gray-500">Au moins 8 caractères (1 majuscule, 1 minuscule, 1 chiffre)</p>
           </div>
 
           <div>
