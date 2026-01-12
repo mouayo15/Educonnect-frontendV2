@@ -3,10 +3,11 @@ import { X, Zap, Trophy, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { modalVariant, backdropVariant, confettiFall, popSmall } from '../lib/motionVariants';
 
-export default function StreakPopup({ isOpen, onClose, streakCount = 5, newAchievement = null, score = 0, totalQuestions = 0 }) {
+export default function StreakPopup({ isOpen, onClose, streakCount = 5, newAchievement = null, score = 0, totalQuestions = 0, earnedXp = 0 }) {
   const [xpProgress, setXpProgress] = useState(0);
 
   useEffect(() => {
+    console.log('StreakPopup reçu:', { score, totalQuestions, earnedXp, streakCount });
     if (isOpen) {
       document.body.style.overflow = 'hidden';
       setXpProgress(0);
@@ -78,7 +79,7 @@ export default function StreakPopup({ isOpen, onClose, streakCount = 5, newAchie
 
               <div className="text-center mb-4">
                 <div className="text-6xl mb-2 animate-bounce-slow">{isPerfect ? '🎉' : isGreat ? '🌟' : '💫'}</div>
-                <h2 className="text-2xl font-extrabold text-gray-900 mb-1">Quiz terminé !</h2>
+                <h2 className="text-2xl font-extrabold text-gray-900 mb-1">Quiz termine !</h2>
                 <p className="text-gray-600">{getMotivationalMessage()}</p>
               </div>
 
@@ -98,7 +99,7 @@ export default function StreakPopup({ isOpen, onClose, streakCount = 5, newAchie
               <div className="grid grid-cols-2 gap-3 mb-4">
                 <div className="bg-white rounded-xl p-3 text-center border border-gray-100">
                   <div className="text-xs text-gray-500">XP Gagnés</div>
-                  <div className="text-xl font-bold text-indigo-600">+{percentage * 2}</div>
+                  <div className="text-xl font-bold text-indigo-600">+{earnedXp}</div>
                 </div>
                 <div className="bg-white rounded-xl p-3 text-center border border-gray-100">
                   <div className="text-xs text-gray-500">Bonus</div>

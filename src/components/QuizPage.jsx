@@ -24,6 +24,7 @@ export function QuizPage({ onNavigate, onLogout }) {
   const [answers, setAnswers] = useState({});
   const [earnedXp, setEarnedXp] = useState(0);
   const [quizTakenBefore, setQuizTakenBefore] = useState(false);
+  const [quizStartTime, setQuizStartTime] = useState(null);
 
   useEffect(() => {
     setAnimateCards(true);
@@ -47,6 +48,8 @@ export function QuizPage({ onNavigate, onLogout }) {
   }, []);
 
   const startQuiz = (quiz) => {
+    setQuizStartTime(Date.now());
+    setEarnedXp(0);
     (async () => {
       try {
         const questions = await api.quizzes.getQuestions(quiz.id);
@@ -156,30 +159,49 @@ export function QuizPage({ onNavigate, onLogout }) {
       player?.completedQuizzes?.includes(selectedQuiz.id) ||
       player?.completedQuizzes?.includes(String(selectedQuiz.id)) ||
       quizTakenBefore;
-    const score = currentQuestions.reduce((acc, q, idx) => acc + (answers[idx] === q.correct ? 1 : 0), 0);
     const difficulty = normalizeDifficulty(selectedQuiz.difficulty);
 
     if (!alreadyCompleted) {
       (async () => {
         try {
-          await api.quizzes.submitAttempt(selectedQuiz.id, { answers });
-        } catch (e) {}
+          // Convert answers object to array (all questions are validated to be answered)
+          const answersArray = Array.from({ length: totalQuestions }, (_, i) => answers[i] ?? 0);
+          const timeSpent = quizStartTime ? Math.floor((Date.now() - quizStartTime) / 1000) : 0;
+          const response = await api.quizzes.submitAttempt(selectedQuiz.id, { answers: answersArray, timeSpent: Math.max(timeSpent, 1) });
+          
+          // Use the backend's score calculation
+          if (response && response.data) {
+            const backendScore = response.data.score || 0;
+            const xpEarned = response.data.xpEarned || 0;
+            
+            setStreakData({
+              streak: player?.streak || 0,
+              score: backendScore,
+              totalQuestions,
+              newAchievement: null,
+            });
+            setEarnedXp(xpEarned);
+            
+            // Update game context with backend values
+            completeQuiz(selectedQuiz.id, backendScore, totalQuestions, difficulty);
+            notification.success(`Quiz terminé ! +${xpEarned} XP`, { duration: 3000 });
+          }
+        } catch (e) {
+          console.error('Quiz submission error:', e);
+        }
       })();
-      const xp = completeQuiz(selectedQuiz.id, score, totalQuestions, difficulty);
-      setEarnedXp(xp);
+      
       setQuizTakenBefore(true);
-      notification.success(`Quiz terminé ! +${xp} XP`, { duration: 3000 });
     } else {
       setEarnedXp(0);
+      setStreakData({
+        streak: player?.streak || 0,
+        score: 0,
+        totalQuestions,
+        newAchievement: null,
+      });
       notification.info('Quiz blanc : XP déjà obtenu');
     }
-
-    setStreakData({
-      streak: player?.streak || 0,
-      score,
-      totalQuestions,
-      newAchievement: null,
-    });
 
     window.scrollTo({ top: 0, behavior: 'smooth' });
     setShowPopup(true);
@@ -202,6 +224,7 @@ export function QuizPage({ onNavigate, onLogout }) {
             streakCount={streakData.streak}
             score={streakData.score}
             totalQuestions={streakData.totalQuestions}
+            earnedXp={earnedXp}
             newAchievement={streakData.newAchievement}
           />
 

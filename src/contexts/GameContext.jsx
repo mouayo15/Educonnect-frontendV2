@@ -152,22 +152,28 @@ export function GameProvider({ children }) {
     }
   }, [player, addXP]);
 
-  // Complete quiz
-  const completeQuiz = useCallback(async (quizId, answers) => {
+  // Complete quiz - update local game state after quiz submission (backend submission is done in QuizPage)
+  const completeQuiz = useCallback(async (quizId, score, totalQuestions, difficulty) => {
     if (!player) return 0;
 
     try {
-      // Submit quiz to backend
-      const result = await api.quizzes.submitAttempt(quizId, { answers });
+      // Calculate XP based on score and difficulty
+      let xpGained = 0;
+      if (score > 0) {
+        const baseXP = { easy: 50, medium: 100, hard: 150 };
+        const difficultyMultiplier = difficulty && baseXP[difficulty] ? baseXP[difficulty] : 100;
+        const scorePercentage = totalQuestions > 0 ? score / totalQuestions : 0;
+        xpGained = Math.floor(difficultyMultiplier * scorePercentage);
+      }
       
-      // Backend returns: { score, totalQuestions, xpGained, passed, etc. }
-      if (result.xpGained) {
-        await addXP(result.xpGained, `Quiz completed: ${result.score}/${result.totalQuestions}`);
+      // Update player XP
+      if (xpGained > 0) {
+        await addXP(xpGained, `Quiz completed: ${score}/${totalQuestions}`);
       }
 
-      return result.xpGained || 0;
+      return xpGained;
     } catch (error) {
-      console.error('Failed to complete quiz:', error);
+      console.error('Failed to update quiz completion:', error);
       return 0;
     }
   }, [player, addXP]);

@@ -3,6 +3,7 @@ import { ChevronRight, Zap, Trophy, Target, Flame, BookOpen, Brain } from 'lucid
 import { motion } from 'framer-motion';
 import { useNotification } from './NotificationProvider';
 import { useGame } from '../contexts/GameContext';
+import { useAuth } from '../contexts/AuthContext';
 import LevelUpPopup from './LevelUpPopup';
 import { AppNav } from './AppNav';
 import api from '../lib/api';
@@ -12,6 +13,7 @@ export function Dashboard({ onNavigate, onLogout }) {
   const [hoveredIndex, setHoveredIndex] = useState(null);
   const notification = useNotification();
   const { player, league, xpProgress, updateStreak, showLevelUp, levelUpData, closeLevelUp } = useGame();
+  const { isAuthenticated } = useAuth();
 
   useEffect(() => {
     setAnimateCards(true);
@@ -52,6 +54,11 @@ export function Dashboard({ onNavigate, onLogout }) {
   useEffect(() => {
     let mounted = true;
     async function load() {
+      if (!isAuthenticated) {
+        setLoading(false);
+        return;
+      }
+
       try {
         const subs = await api.courses.getAllSubjects();
         if (mounted && Array.isArray(subs)) {
@@ -66,7 +73,9 @@ export function Dashboard({ onNavigate, onLogout }) {
         if (mounted && act && Array.isArray(act.items)) {
           setRecentActivities(act.items);
         }
-      } catch (e) {}
+      } catch (e) {
+        console.error('Error loading activity:', e);
+      }
 
       try {
         const ach = await api.users.getAchievements();
@@ -87,7 +96,7 @@ export function Dashboard({ onNavigate, onLogout }) {
     }
     load();
     return () => { mounted = false; };
-  }, []);
+  }, [isAuthenticated]);
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-b from-white via-gray-50 to-gray-100">
