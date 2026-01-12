@@ -1,14 +1,14 @@
 import { useState } from 'react';
 import { User, Mail, Lock, Eye, EyeOff, UserCheck } from 'lucide-react';
-import api from '../lib/api';
+import { useAuth } from '../contexts/AuthContext';
 
 export function Register({ onRegister, onSwitchToLogin }) {
+  const { register } = useAuth();
   const [formData, setFormData] = useState({
-    nom: '',
-    prenom: '',
+    username: '',
     email: '',
     password: '',
-    role: 'eleve'
+    avatar: '👤'
   });
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -19,15 +19,26 @@ export function Register({ onRegister, onSwitchToLogin }) {
     setIsLoading(true);
     setError('');
 
+    // Validation
+    if (formData.password.length < 6) {
+      setError('Le mot de passe doit contenir au moins 6 caractères');
+      setIsLoading(false);
+      return;
+    }
+
     try {
-      const data = await api.auth.register(formData);
-      localStorage.setItem('token', data.token);
-      if (data.refreshToken) localStorage.setItem('refreshToken', data.refreshToken);
-      localStorage.setItem('user', JSON.stringify(data.user));
-      localStorage.setItem('userRole', data.user.role);
-      onRegister(data.user);
+      const result = await register(formData);
+      
+      if (result.success) {
+        // Call parent onRegister handler if provided
+        if (onRegister) {
+          onRegister(result.data.user);
+        }
+      } else {
+        setError(result.error);
+      }
     } catch (err) {
-      setError(err.message || 'Erreur de réseau. Vérifiez votre connexion.');
+      setError(err.message || 'Une erreur est survenue. Veuillez réessayer.');
     } finally {
       setIsLoading(false);
     }
@@ -67,35 +78,26 @@ export function Register({ onRegister, onSwitchToLogin }) {
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Prénom
-              </label>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Nom d'utilisateur
+            </label>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 bg-gray-100 p-2 rounded-full">
+                <User className="w-4 h-4 text-gray-600" aria-hidden="true" />
+              </span>
               <input
                 type="text"
-                name="prenom"
-                value={formData.prenom}
+                name="username"
+                value={formData.username}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                placeholder="Jean"
+                className="w-full pl-14 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                placeholder="jean_dupont"
                 required
+                minLength={3}
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Nom
-              </label>
-              <input
-                type="text"
-                name="nom"
-                value={formData.nom}
-                onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                placeholder="Dupont"
-                required
-              />
-            </div>
+            <p className="mt-1 text-xs text-gray-500">Au moins 3 caractères</p>
           </div>
 
           <div>
@@ -134,6 +136,7 @@ export function Register({ onRegister, onSwitchToLogin }) {
                 className="w-full pl-14 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 placeholder="••••••••"
                 required
+                minLength={6}
               />
               <button
                 type="button"
@@ -143,20 +146,29 @@ export function Register({ onRegister, onSwitchToLogin }) {
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
             </div>
+            <p className="mt-1 text-xs text-gray-500">Au moins 6 caractères</p>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Rôle
+              Avatar
             </label>
             <select
-              name="role"
-              value={formData.role}
+              name="avatar"
+              value={formData.avatar}
               onChange={handleChange}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
             >
-              <option value="eleve">Élève</option>
-              <option value="prof">Professeur</option>
+              <option value="👤">👤 Par défaut</option>
+              <option value="👧">👧 Fille</option>
+              <option value="👦">👦 Garçon</option>
+              <option value="👨">👨 Homme</option>
+              <option value="👩">👩 Femme</option>
+              <option value="🧑">🧑 Personne</option>
+              <option value="🦊">🦊 Renard</option>
+              <option value="🐼">🐼 Panda</option>
+              <option value="🦁">🦁 Lion</option>
+              <option value="🐨">🐨 Koala</option>
             </select>
           </div>
 

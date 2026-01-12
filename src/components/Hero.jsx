@@ -14,7 +14,7 @@ const itemUp = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: 'easeOut' } }
 };
 
-export function Hero({ onGetStarted }) {
+export function Hero({ onNavigate }) {
   return (
     <motion.section className="relative overflow-hidden" initial="hidden" whileInView="visible" viewport={{ once: true }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
@@ -37,7 +37,7 @@ export function Hero({ onGetStarted }) {
 
             <motion.div className="flex flex-wrap gap-4" variants={itemUp}>
               <button 
-                onClick={onGetStarted}
+                onClick={() => onNavigate('register')}
                 className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:shadow-xl transition-shadow"
               >
                 Commencer gratuitement

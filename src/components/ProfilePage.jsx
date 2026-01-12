@@ -2,9 +2,11 @@ import { useEffect, useState } from 'react';
 import { AppNav } from './AppNav';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { User, Mail, Calendar, Award, Star, Trophy, TrendingUp, Settings, Bell } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 import api from '../lib/api';
 
 export function ProfilePage({ onNavigate, onLogout }) {
+  const { user: authUser } = useAuth();
   const [animateCards, setAnimateCards] = useState(false);
 
   useEffect(() => {

@@ -60,13 +60,13 @@ async function request(path, { method = 'GET', body, headers = {}, auth = false 
         const refreshRes = await fetch(`${API_BASE}/auth/refresh`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ token: refreshToken })
+          body: JSON.stringify({ refreshToken })
         });
         const refreshData = await refreshRes.json();
-        if (refreshRes.ok && refreshData.token) {
-          localStorage.setItem('token', refreshData.token);
+        if (refreshRes.ok && refreshData?.data?.accessToken) {
+          localStorage.setItem('token', refreshData.data.accessToken);
           // retry original request with new token
-          opts.headers['Authorization'] = `Bearer ${refreshData.token}`;
+          opts.headers['Authorization'] = `Bearer ${refreshData.data.accessToken}`;
           res = await doFetch();
           try { data = await res.json(); } catch (e) {}
         }
@@ -102,7 +102,7 @@ async function request(path, { method = 'GET', body, headers = {}, auth = false 
   }
 
   if (!res.ok) {
-    const message = data?.message || res.statusText || 'Request failed';
+    const message = data?.error || data?.message || res.statusText || 'Request failed';
     const err = new Error(message);
     err.status = res.status;
     err.body = data;
@@ -120,7 +120,7 @@ const auth = {
   register: (payload) => request('/auth/register', { method: 'POST', body: payload }),
   refresh: (payload) => request('/auth/refresh', { method: 'POST', body: payload }),
   me: () => request('/auth/me', { auth: true }),
-  logout: () => request('/auth/logout', { method: 'POST', auth: true }),
+  logout: (payload) => request('/auth/logout', { method: 'POST', auth: true, body: payload }),
   changePassword: (payload) => request('/auth/change-password', { method: 'POST', auth: true, body: payload }),
 };
 

@@ -6,7 +6,7 @@ const headerVariant = {
   visible: { y: 0, opacity: 1, transition: { duration: 0.45, ease: 'easeOut' } }
 };
 
-export function Header({ onGetStarted }) {
+export function Header({ onNavigate }) {
   return (
     <motion.header
       className="bg-white shadow-sm sticky top-0 z-50"
@@ -46,14 +46,14 @@ export function Header({ onGetStarted }) {
               <Search className="w-5 h-5 text-gray-600" />
             </button>
             <button 
-              onClick={onGetStarted}
+              onClick={() => onNavigate('login')}
               className="hidden md:flex items-center gap-2 px-4 py-2 text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-50 transition-colors"
             >
               <User className="w-4 h-4" />
               Connexion
             </button>
             <button 
-              onClick={onGetStarted}
+              onClick={() => onNavigate('register')}
               className="hidden md:block px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:shadow-lg transition-shadow"
             >
               S'inscrire

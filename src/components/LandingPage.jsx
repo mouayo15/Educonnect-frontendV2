@@ -5,11 +5,11 @@ import { Subjects } from './Subjects';
 import { Features } from './Features';
 import { Stats } from './Stats';
 
-export function LandingPage({ onGetStarted }) {
+export function LandingPage({ onNavigate }) {
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
-      <Header onGetStarted={onGetStarted} />
-      <Hero onGetStarted={onGetStarted} />
+      <Header onNavigate={onNavigate} />
+      <Hero onNavigate={onNavigate} />
       <Stats />
       <Levels />
       <Subjects />

@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { User, Mail, Lock, Eye, EyeOff } from 'lucide-react';
-import api from '../lib/api';
+import { useAuth } from '../contexts/AuthContext';
 
 export function Login({ onLogin, onSwitchToRegister }) {
+  const { login } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -17,14 +18,18 @@ export function Login({ onLogin, onSwitchToRegister }) {
     setError('');
 
     try {
-      const data = await api.auth.login(formData);
-      localStorage.setItem('token', data.token);
-      if (data.refreshToken) localStorage.setItem('refreshToken', data.refreshToken);
-      localStorage.setItem('user', JSON.stringify(data.user));
-      localStorage.setItem('userRole', data.user.role);
-      onLogin(data.user);
+      const result = await login(formData);
+      
+      if (result.success) {
+        // Call parent onLogin handler if provided
+        if (onLogin) {
+          onLogin(result.data.user);
+        }
+      } else {
+        setError(result.error);
+      }
     } catch (err) {
-      setError(err.message || 'Erreur de réseau. Vérifiez votre connexion.');
+      setError(err.message || 'Une erreur est survenue. Veuillez réessayer.');
     } finally {
       setIsLoading(false);
     }
