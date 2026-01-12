@@ -15,9 +15,13 @@ export function Dashboard({ onNavigate, onLogout }) {
 
   useEffect(() => {
     setAnimateCards(true);
-    updateStreak();
-    notification.success(`Welcome back, ${player.username}!`, { description: 'Ready to level up today? 🚀' });
-  }, [notification, player.username, updateStreak]);
+    // Run once when username is known; avoid function deps to prevent loops
+    if (player?.username) {
+      updateStreak();
+      notification.success(`Welcome back, ${player.username}!`, { description: 'Ready to level up today? 🚀' });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [player?.username]);
 
   // map tailwind-like color tokens to explicit CSS gradients as a reliable fallback
   const gradientMap = {
@@ -42,6 +46,7 @@ export function Dashboard({ onNavigate, onLogout }) {
   ]);
   const [recentActivities, setRecentActivities] = useState([]);
   const [achievements, setAchievements] = useState([]);
+  const [quizStats, setQuizStats] = useState({ completed: 0, totalScore: 0 });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -67,6 +72,17 @@ export function Dashboard({ onNavigate, onLogout }) {
         const ach = await api.users.getAchievements();
         if (mounted && Array.isArray(ach)) setAchievements(ach);
       } catch (e) {}
+
+      try {
+        const stats = await api.users.getStats();
+        if (mounted && stats) {
+          setQuizStats({
+            completed: stats.quizzes_completed || 0,
+            totalScore: stats.total_score || 0
+          });
+        }
+      } catch (e) {}
+      
       setLoading(false);
     }
     load();
@@ -129,7 +145,7 @@ export function Dashboard({ onNavigate, onLogout }) {
           {[
             { emoji: '🔥', value: player.streak, label: "Day Streak", color: 'from-amber-400 to-orange-500', delay: 0 },
             { emoji: '⚡', value: player.xp, label: 'Total XP', color: 'from-sky-500 to-indigo-500', delay: 1 },
-            { emoji: '🎯', value: player.completedQuizzes.length, label: 'Quizzes Won', color: 'from-emerald-400 to-teal-500', delay: 2 },
+            { emoji: '🎯', value: quizStats.completed, label: 'Quizzes Won', color: 'from-emerald-400 to-teal-500', delay: 2 },
             { emoji: '🏆', value: player.level, label: 'Level', color: 'from-violet-500 to-fuchsia-500', delay: 3 },
           ].map((stat, index) => (
             <div

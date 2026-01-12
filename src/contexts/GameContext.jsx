@@ -1,4 +1,6 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import { useAuth } from './AuthContext';
+import api from '../lib/api';
 
 const GameContext = createContext();
 
@@ -20,32 +22,42 @@ const LEAGUES = {
 };
 
 export function GameProvider({ children }) {
-  const [player, setPlayer] = useState(() => {
-    const saved = localStorage.getItem('scolarix_player');
-    return saved ? JSON.parse(saved) : {
-      username: 'Sarah',
-      avatar: '👧',
-      xp: 450,
-      level: 5,
-      streak: 7,
-      lastLoginDate: new Date().toDateString(),
-      subjectsProgress: {
-        math: 75,
-        french: 60,
-        science: 85,
-        history: 45,
-      },
-      completedLessons: [],
-      completedQuizzes: [],
-    };
-  });
-
+  const { user, isAuthenticated } = useAuth();
+  const [player, setPlayer] = useState(null);
   const [showLevelUp, setShowLevelUp] = useState(false);
   const [levelUpData, setLevelUpData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const hasUpdatedStreakRef = useRef(false);
 
+  // Fetch player data from backend when user is authenticated
   useEffect(() => {
-    localStorage.setItem('scolarix_player', JSON.stringify(player));
-  }, [player]);
+    const fetchPlayerData = async () => {
+      if (!isAuthenticated || !user) {
+        setPlayer(null);
+        setLoading(false);
+        return;
+      }
+
+      try {
+        // Use the authenticated user data from AuthContext
+        setPlayer({
+          id: user.id,
+          username: user.username,
+          avatar: user.avatar || '👤',
+          xp: user.xp || 0,
+          level: user.level || 1,
+          streak: user.streak || 0,
+          email: user.email,
+        });
+      } catch (error) {
+        console.error('Failed to load player data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPlayerData();
+  }, [user, isAuthenticated]);
 
   // Calculate current league based on level
   const getCurrentLeague = (level) => {
@@ -66,92 +78,123 @@ export function GameProvider({ children }) {
   };
 
   // Add XP and check for level up
-  const addXP = (amount, reason = '') => {
-    setPlayer(prev => {
-      const newXP = prev.xp + amount;
-      const newLevel = Math.floor(newXP / XP_PER_LEVEL) + 1;
-      const oldLevel = prev.level;
-      const leveledUp = newLevel > oldLevel;
+  const addXP = useCallback(async (amount, reason = '') => {
+    if (!player) return;
 
-      if (leveledUp) {
-        const newLeague = getCurrentLeague(newLevel);
-        const oldLeague = getCurrentLeague(oldLevel);
-        const leagueChanged = newLeague.name !== oldLeague.name;
+    const newXP = player.xp + amount;
+    const newLevel = Math.floor(newXP / XP_PER_LEVEL) + 1;
+    const oldLevel = player.level;
+    const leveledUp = newLevel > oldLevel;
 
-        setLevelUpData({
-          oldLevel,
-          newLevel,
-          xpGained: amount,
-          reason,
-          leagueChanged,
-          newLeague: leagueChanged ? newLeague : null,
-        });
-        setShowLevelUp(true);
-      }
+    // Update local state immediately for responsiveness
+    setPlayer(prev => ({
+      ...prev,
+      xp: newXP,
+      level: newLevel,
+    }));
 
-      return {
-        ...prev,
-        xp: newXP,
-        level: newLevel,
-      };
-    });
-  };
+    if (leveledUp) {
+      const newLeague = getCurrentLeague(newLevel);
+      const oldLeague = getCurrentLeague(oldLevel);
+      const leagueChanged = newLeague.name !== oldLeague.name;
+
+      setLevelUpData({
+        oldLevel,
+        newLevel,
+        xpGained: amount,
+        reason,
+        leagueChanged,
+        newLeague: leagueChanged ? newLeague : null,
+      });
+      setShowLevelUp(true);
+    }
+
+    // Sync with backend (fire and forget, don't block UI)
+    try {
+      await api.users.updateProfile({ xp: newXP, level: newLevel });
+    } catch (error) {
+      console.error('Failed to sync XP with backend:', error);
+    }
+  }, [player]);
 
   // Update streak
-  const updateStreak = () => {
-    const today = new Date().toDateString();
-    const lastLogin = player.lastLoginDate;
-    
-    if (lastLogin !== today) {
-      const yesterday = new Date();
-      yesterday.setDate(yesterday.getDate() - 1);
-      const wasYesterday = lastLogin === yesterday.toDateString();
-      
+  const updateStreak = useCallback(async () => {
+    if (!player) return;
+    if (hasUpdatedStreakRef.current) return;
+    hasUpdatedStreakRef.current = true;
+
+    // The backend handles streak logic, so just call the endpoint
+    try {
+      const updatedUser = await api.users.getProfile();
       setPlayer(prev => ({
         ...prev,
-        streak: wasYesterday ? prev.streak + 1 : 1,
-        lastLoginDate: today,
+        streak: updatedUser.streak,
       }));
+    } catch (error) {
+      console.error('Failed to update streak:', error);
     }
-  };
+  }, [player]);
 
   // Complete lesson
-  const completeLesson = (lessonId, subjectKey) => {
-    if (!player.completedLessons.includes(lessonId)) {
-      setPlayer(prev => ({
-        ...prev,
-        completedLessons: [...prev.completedLessons, lessonId],
-        subjectsProgress: {
-          ...prev.subjectsProgress,
-          [subjectKey]: Math.min(100, (prev.subjectsProgress[subjectKey] || 0) + 5),
-        },
-      }));
-      addXP(10, 'Lesson completed');
+  const completeLesson = useCallback(async (lessonId, subjectKey) => {
+    if (!player) return;
+
+    try {
+      // Call backend to complete lesson
+      const result = await api.courses.completeLesson(lessonId, {});
+      
+      // Update local state with backend response
+      if (result.xpGained) {
+        await addXP(result.xpGained, 'Lesson completed');
+      }
+    } catch (error) {
+      console.error('Failed to complete lesson:', error);
     }
-  };
+  }, [player, addXP]);
 
   // Complete quiz
-  const completeQuiz = (quizId, score, totalQuestions, difficulty = 'medium') => {
-    const xpRewards = {
-      easy: 10,
-      medium: 20,
-      hard: 40,
-    };
-    
-    const baseXP = xpRewards[difficulty] || 20;
-    const scoreMultiplier = score / totalQuestions;
-    const xpGained = Math.round(baseXP * scoreMultiplier);
-    
-    if (!player.completedQuizzes.includes(quizId)) {
-      setPlayer(prev => ({
-        ...prev,
-        completedQuizzes: [...prev.completedQuizzes, quizId],
-      }));
+  const completeQuiz = useCallback(async (quizId, answers) => {
+    if (!player) return 0;
+
+    try {
+      // Submit quiz to backend
+      const result = await api.quizzes.submitAttempt(quizId, { answers });
+      
+      // Backend returns: { score, totalQuestions, xpGained, passed, etc. }
+      if (result.xpGained) {
+        await addXP(result.xpGained, `Quiz completed: ${result.score}/${result.totalQuestions}`);
+      }
+
+      return result.xpGained || 0;
+    } catch (error) {
+      console.error('Failed to complete quiz:', error);
+      return 0;
     }
-    
-    addXP(xpGained, `Quiz completed: ${score}/${totalQuestions}`);
-    return xpGained;
-  };
+  }, [player, addXP]);
+
+  // Don't render children until we've checked authentication
+  if (loading) {
+    return <div>Loading game data...</div>;
+  }
+
+  // If not authenticated, provide minimal context
+  if (!player) {
+    const value = {
+      player: null,
+      league: LEAGUES.BRONZE,
+      xpProgress: { current: 0, needed: XP_PER_LEVEL, percentage: 0 },
+      addXP: () => {},
+      updateStreak: () => {},
+      completeLesson: () => {},
+      completeQuiz: () => {},
+      showLevelUp: false,
+      levelUpData: null,
+      closeLevelUp: () => {},
+      XP_PER_LEVEL,
+      LEAGUES,
+    };
+    return <GameContext.Provider value={value}>{children}</GameContext.Provider>;
+  }
 
   const league = getCurrentLeague(player.level);
   const xpProgress = getXPProgress(player.xp);

@@ -40,7 +40,14 @@ export function CoursePage({ onNavigate, onLogout }) {
       if (!selectedSubject) return;
       try {
         const ch = await api.courses.getChaptersBySubject(selectedSubject);
-        if (mounted && ch) setChapters(prev => ({ ...prev, [selectedSubject]: ch }));
+        if (mounted && Array.isArray(ch)) {
+          const normalized = ch.map(c => ({
+            ...c,
+            lessons: Array.isArray(c?.lessons) ? c.lessons : [],
+            progress: typeof c?.progress === 'number' ? c.progress : 0
+          }));
+          setChapters(prev => ({ ...prev, [selectedSubject]: normalized }));
+        }
       } catch (e) {}
     }
     loadChapters();
@@ -163,7 +170,7 @@ export function CoursePage({ onNavigate, onLogout }) {
                 
                 <div className="flex items-center gap-2 mb-2">
                   <span className={`text-sm font-semibold ${selectedChapter === chapter.id ? 'text-white' : 'text-gray-600'}`}>
-                    {chapter.lessons.length} leçons
+                    {(Array.isArray(chapter.lessons) ? chapter.lessons.length : 0)} leçons
                   </span>
                 </div>
                 
@@ -187,16 +194,27 @@ export function CoursePage({ onNavigate, onLogout }) {
                 animateCards ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-8'
               }`}>
                 <div className="mb-6">
-                  <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                    {currentChapters.find(c => c.id === selectedChapter)?.title}
-                  </h2>
-                  <p className="text-gray-600">
-                    {currentChapters.find(c => c.id === selectedChapter)?.lessons.length} leçons à découvrir
-                  </p>
+                  {(() => {
+                    const selected = currentChapters.find(c => c.id === selectedChapter);
+                    const lessons = Array.isArray(selected?.lessons) ? selected.lessons : [];
+                    return (
+                      <>
+                        <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                          {selected?.title || 'Chapitre'}
+                        </h2>
+                        <p className="text-gray-600">
+                          {lessons.length} leçons à découvrir
+                        </p>
+                      </>
+                    );
+                  })()}
                 </div>
 
                 <div className="space-y-3">
-                  {currentChapters.find(c => c.id === selectedChapter)?.lessons.map((lesson, index) => (
+                  {(Array.isArray(currentChapters.find(c => c.id === selectedChapter)?.lessons)
+                    ? currentChapters.find(c => c.id === selectedChapter)?.lessons
+                    : []
+                   ).map((lesson, index) => (
                     <div
                       key={index}
                       className={`p-5 rounded-xl border-2 transition-all duration-300 transform hover:scale-102 hover:shadow-lg ${
