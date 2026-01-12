@@ -4,6 +4,7 @@ import { useNotification } from './NotificationProvider';
 import { useGame } from '../contexts/GameContext';
 import { Play, Trophy, Clock, Star, Target, ArrowRight, ArrowLeft, CheckCircle } from 'lucide-react';
 import StreakPopup from './StreakPopup';
+import api from '../lib/api';
 
 export function QuizPage({ onNavigate, onLogout }) {
   const [animateCards, setAnimateCards] = useState(false);
@@ -25,14 +26,29 @@ export function QuizPage({ onNavigate, onLogout }) {
   const [quizTakenBefore, setQuizTakenBefore] = useState(false);
 
   const startQuiz = (quiz) => {
-    const alreadyDone = player.completedQuizzes?.includes(quiz.id) || player.completedQuizzes?.includes(String(quiz.id)) || quiz.completed;
-    setSelectedQuiz(quiz);
-    setCurrentQuestion(0);
-    setAnswers({});
-    setQuizCompleted(false);
-    setEarnedXp(0);
-    setQuizTakenBefore(alreadyDone);
-    setShowPopup(false);
+    (async () => {
+      try {
+        const questions = await api.quizzes.getQuestions(quiz.id);
+        const enriched = { ...quiz, questionSet: Array.isArray(questions) ? questions : quiz.questionSet || [], questions: (questions && questions.length) || quiz.questions };
+        const alreadyDone = player.completedQuizzes?.includes(quiz.id) || player.completedQuizzes?.includes(String(quiz.id)) || quiz.completed;
+        setSelectedQuiz(enriched);
+        setCurrentQuestion(0);
+        setAnswers({});
+        setQuizCompleted(false);
+        setEarnedXp(0);
+        setQuizTakenBefore(alreadyDone);
+        setShowPopup(false);
+      } catch (e) {
+        const alreadyDone = player.completedQuizzes?.includes(quiz.id) || player.completedQuizzes?.includes(String(quiz.id)) || quiz.completed;
+        setSelectedQuiz(quiz);
+        setCurrentQuestion(0);
+        setAnswers({});
+        setQuizCompleted(false);
+        setEarnedXp(0);
+        setQuizTakenBefore(alreadyDone);
+        setShowPopup(false);
+      }
+    })();
   };
 
   useEffect(() => {
@@ -46,100 +62,23 @@ export function QuizPage({ onNavigate, onLogout }) {
     }
   }, [selectedQuiz]);
 
-  const quizzes = [
-    {
-      id: 1,
-      title: 'Les fractions - Niveau débutant',
-      subject: 'Mathématiques',
-      emoji: '🔢',
-      questions: 10,
-      questionSet: [
-        { question: 'Combien font 1/2 + 1/4 ?', options: ['1/6', '2/6', '3/4', '1/3'], correct: 2 },
-        { question: 'Quelle fraction est la plus grande ?', options: ['1/3', '1/2', '2/5', '3/8'], correct: 1 },
-        { question: 'Combien font 3/4 - 1/4 ?', options: ['1/2', '1/4', '2/4', '3/8'], correct: 0 },
-      ],
-      duration: '15 min',
-      difficulty: 'Facile',
-      color: 'from-blue-500 to-blue-600',
-      bestScore: 8,
-      completed: true,
-    },
-    {
-      id: 2,
-      title: 'Grammaire française',
-      subject: 'Français',
-      emoji: '📖',
-      questions: 12,
-      questionSet: [
-        { question: 'Quel est le sujet dans "Pierre mange une pomme" ?', options: ['Pierre', 'mange', 'pomme', 'une'], correct: 0 },
-        { question: 'Quel temps est utilisé : "Elle ira" ?', options: ['Passé', 'Présent', 'Futur', 'Conditionnel'], correct: 2 },
-        { question: 'Quel est le féminin de "acteur" ?', options: ['acteuse', 'actrice', 'acteur', 'actée'], correct: 1 },
-      ],
-      duration: '20 min',
-      difficulty: 'Moyen',
-      color: 'from-purple-500 to-purple-600',
-      bestScore: 10,
-      completed: true,
-    },
-    {
-      id: 3,
-      title: 'La photosynthèse',
-      subject: 'Sciences',
-      emoji: '🌱',
-      questions: 8,
-      questionSet: [
-        { question: 'Où se produit la photosynthèse ?', options: ['Racines', 'Feuilles', 'Fleurs', 'Tronc'], correct: 1 },
-        { question: 'Quel gaz est absorbé ?', options: ['Oxygène', 'Azote', 'Dioxyde de carbone', 'Argon'], correct: 2 },
-        { question: 'Quel gaz est rejeté ?', options: ['Oxygène', 'Dioxyde de carbone', 'Helium', 'Hydrogène'], correct: 0 },
-      ],
-      duration: '10 min',
-      difficulty: 'Facile',
-      color: 'from-green-500 to-green-600',
-      bestScore: null,
-      completed: false,
-    },
-    {
-      id: 4,
-      title: 'Le théorème de Pythagore',
-      subject: 'Mathématiques',
-      emoji: '📐',
-      questions: 15,
-      questionSet: [
-        { question: 'a² + b² = ?', options: ['c²', '2ab', 'a+b', 'ab'], correct: 0 },
-        { question: 'Triangle requis ?', options: ['Isocèle', 'Equilatéral', 'Rectangle', 'Quelconque'], correct: 2 },
-        { question: 'Si a=3, b=4 alors c=?', options: ['5', '6', '7', '4'], correct: 0 },
-      ],
-      duration: '25 min',
-      difficulty: 'Difficile',
-      color: 'from-orange-500 to-orange-600',
-      bestScore: null,
-      completed: false,
-    },
-    {
-      id: 5,
-      title: 'Les rois de France',
-      subject: 'Histoire',
-      emoji: '👑',
-      questions: 10,
-      duration: '15 min',
-      difficulty: 'Moyen',
-      color: 'from-red-500 to-red-600',
-      bestScore: 6,
-      completed: true,
-    },
-    {
-      id: 6,
-      title: 'Les cellules',
-      subject: 'Sciences',
-      emoji: '🔬',
-      questions: 12,
-      duration: '20 min',
-      difficulty: 'Moyen',
-      color: 'from-teal-500 to-teal-600',
-      bestScore: null,
-      completed: false,
-    },
-  ];
+  const [quizzes, setQuizzes] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+    async function load() {
+      try {
+        const data = await api.quizzes.getAll();
+        if (mounted && Array.isArray(data)) setQuizzes(data);
+      } catch (e) {
+        // keep built-in samples if any
+      }
+      setLoading(false);
+    }
+    load();
+    return () => { mounted = false; };
+  }, []);
 
   const getDifficultyColor = (difficulty) => {
     switch (difficulty) {
@@ -209,6 +148,11 @@ export function QuizPage({ onNavigate, onLogout }) {
     const difficulty = normalizeDifficulty(selectedQuiz.difficulty);
 
     if (!alreadyCompleted) {
+      (async () => {
+        try {
+          await api.quizzes.submitAttempt(selectedQuiz.id, { answers });
+        } catch (e) {}
+      })();
       const xp = completeQuiz(selectedQuiz.id, score, totalQuestions, difficulty);
       setEarnedXp(xp);
       setQuizTakenBefore(true);
@@ -233,6 +177,11 @@ export function QuizPage({ onNavigate, onLogout }) {
   return (
     <div className={`min-h-screen w-full bg-gradient-to-b from-white to-gray-50 ${showPopup ? 'blur-sm' : ''}`}>
       <AppNav currentPage="quiz" onNavigate={onNavigate} onLogout={onLogout} />
+
+      {loading ? (
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 text-center">Chargement des quiz...</div>
+      ) : (
+      <div>
 
       <StreakPopup 
         isOpen={showPopup}
@@ -506,6 +455,8 @@ export function QuizPage({ onNavigate, onLogout }) {
 
 
       </div>
+      </div>
+      )}
     </div>
   );
 }

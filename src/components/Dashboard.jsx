@@ -5,6 +5,7 @@ import { useNotification } from './NotificationProvider';
 import { useGame } from '../contexts/GameContext';
 import LevelUpPopup from './LevelUpPopup';
 import { AppNav } from './AppNav';
+import api from '../lib/api';
 
 export function Dashboard({ onNavigate, onLogout }) {
   const [animateCards, setAnimateCards] = useState(false);
@@ -35,30 +36,50 @@ export function Dashboard({ onNavigate, onLogout }) {
     return <span>{symbol}</span>;
   }
 
-  const subjects = [
+  const [subjects, setSubjects] = useState([
     { name: 'Mathématiques', progress: 75, color: 'bg-blue-500', emoji: '🔢', lessons: 12, exercises: 8 },
     { name: 'Français', progress: 60, color: 'bg-purple-500', emoji: '📖', lessons: 10, exercises: 5 },
-    { name: 'Sciences', progress: 85, color: 'bg-green-500', emoji: '🔬', lessons: 15, exercises: 12 },
-    { name: 'Histoire', progress: 45, color: 'bg-orange-500', emoji: '🏛️', lessons: 8, exercises: 3 },
-  ];
+  ]);
+  const [recentActivities, setRecentActivities] = useState([]);
+  const [achievements, setAchievements] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const recentActivities = [
-    { title: 'Théorème de Pythagore', subject: 'Mathématiques', type: 'Cours terminé', time: 'Il y a 2h', emoji: '✅' },
-    { title: 'Quiz sur les fractions', subject: 'Mathématiques', type: 'Quiz réussi', time: 'Hier', emoji: '🎯' },
-    { title: 'La photosynthèse', subject: 'Sciences', type: 'Exercices terminés', time: 'Hier', emoji: '✏️' },
-  ];
+  useEffect(() => {
+    let mounted = true;
+    async function load() {
+      try {
+        const subs = await api.courses.getAllSubjects();
+        if (mounted && Array.isArray(subs)) {
+          setSubjects(subs.map(s => ({ name: s.name || s.title || 'Sujet', progress: s.progress || 0, color: 'bg-blue-500', emoji: s.emoji || '📘', lessons: s.lessons_count || 0, exercises: s.exercises_count || 0 })));
+        }
+      } catch (e) {
+        // keep defaults on error
+      }
 
-  const achievements = [
-    { title: '7 jours consécutifs', emoji: '🔥', unlocked: true },
-    { title: 'Premier quiz parfait', emoji: '🌟', unlocked: true },
-    { title: '50 exercices réussis', emoji: '🏆', unlocked: true },
-    { title: 'Maître des maths', emoji: '🎓', unlocked: false },
-  ];
+      try {
+        const act = await api.users.getActivity();
+        if (mounted && act && Array.isArray(act.items)) {
+          setRecentActivities(act.items);
+        }
+      } catch (e) {}
+
+      try {
+        const ach = await api.users.getAchievements();
+        if (mounted && Array.isArray(ach)) setAchievements(ach);
+      } catch (e) {}
+      setLoading(false);
+    }
+    load();
+    return () => { mounted = false; };
+  }, []);
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-b from-white via-gray-50 to-gray-100">
       <AppNav currentPage="dashboard" onNavigate={onNavigate} onLogout={onLogout} />
-
+      {loading ? (
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 text-center">Chargement...</div>
+      ) : (
+        <div>
       <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
         {/* Player Card - Simple & Clean */}
         <div
@@ -317,6 +338,8 @@ export function Dashboard({ onNavigate, onLogout }) {
         onClose={closeLevelUp}
         levelUpData={levelUpData}
       />
+      </div>
+      )}
     </div>
   );
 }

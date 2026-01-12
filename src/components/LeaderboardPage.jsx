@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { AppNav } from './AppNav';
 import { useGame } from '../contexts/GameContext';
+import api from '../lib/api';
 
 export function LeaderboardPage({ onNavigate, onLogout }) {
   const [animateCards, setAnimateCards] = useState(false);
@@ -10,19 +11,30 @@ export function LeaderboardPage({ onNavigate, onLogout }) {
     setAnimateCards(true);
   }, []);
 
-  // Mock leaderboard data
-  const leaderboardData = [
+  const [leaderboardData, setLeaderboardData] = useState([
     { rank: 1, username: 'DragonMaster', level: 12, xp: 1250, league: 'Diamond', avatar: '🐉', isCurrentUser: false },
     { rank: 2, username: 'StarGazer', level: 11, xp: 1180, league: 'Diamond', avatar: '⭐', isCurrentUser: false },
     { rank: 3, username: 'MathWizard', level: 10, xp: 1050, league: 'Diamond', avatar: '🧙', isCurrentUser: false },
     { rank: 4, username: 'BookWorm', level: 9, xp: 920, league: 'Gold', avatar: '📚', isCurrentUser: false },
     { rank: 5, username: player.username, level: player.level, xp: player.xp, league: league.name, avatar: player.avatar, isCurrentUser: true },
-    { rank: 6, username: 'ScienceKid', level: 5, xp: 430, league: 'Silver', avatar: '🔬', isCurrentUser: false },
-    { rank: 7, username: 'HistoryBuff', level: 4, xp: 380, league: 'Silver', avatar: '🏛️', isCurrentUser: false },
-    { rank: 8, username: 'ArtLover', level: 3, xp: 280, league: 'Bronze', avatar: '🎨', isCurrentUser: false },
-    { rank: 9, username: 'MusicNote', level: 3, xp: 260, league: 'Bronze', avatar: '🎵', isCurrentUser: false },
-    { rank: 10, username: 'SportsFan', level: 2, xp: 180, league: 'Bronze', avatar: '⚽', isCurrentUser: false },
-  ];
+  ]);
+
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+    async function load() {
+      try {
+        const data = await api.leaderboard.getGlobal();
+        if (mounted && Array.isArray(data)) setLeaderboardData(data);
+      } catch (e) {
+        // keep mock on error
+      }
+      setLoading(false);
+    }
+    load();
+    return () => { mounted = false; };
+  }, []);
 
   const getLeagueEmoji = (leagueName) => {
     switch (leagueName) {
@@ -55,6 +67,9 @@ export function LeaderboardPage({ onNavigate, onLogout }) {
     <div className="min-h-screen w-full bg-gradient-to-b from-white via-gray-50 to-gray-100">
       <AppNav currentPage="leaderboard" onNavigate={onNavigate} onLogout={onLogout} />
 
+      {loading ? (
+        <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 text-center">Chargement du leaderboard...</div>
+      ) : (
       <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
         {/* Header */}
         <div className={`mb-8 text-center transform transition-all duration-700 ${animateCards ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
@@ -231,6 +246,7 @@ export function LeaderboardPage({ onNavigate, onLogout }) {
           ))}
         </div>
       </div>
+      )}
     </div>
   );
 }

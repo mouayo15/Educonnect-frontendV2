@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { AppNav } from './AppNav';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { User, Mail, Calendar, Award, Star, Trophy, TrendingUp, Settings, Bell } from 'lucide-react';
+import api from '../lib/api';
 
 export function ProfilePage({ onNavigate, onLogout }) {
   const [animateCards, setAnimateCards] = useState(false);
@@ -9,33 +10,56 @@ export function ProfilePage({ onNavigate, onLogout }) {
   useEffect(() => {
     setAnimateCards(true);
   }, []);
-  const achievements = [
-    { emoji: '🔥', title: 'Série de 7 jours', description: 'Connecté 7 jours d\'affilée', unlocked: true, date: '5 janvier 2026' },
-    { emoji: '⭐', title: 'Premier quiz parfait', description: '100% de bonnes réponses', unlocked: true, date: '3 janvier 2026' },
-    { emoji: '🏆', title: '50 exercices réussis', description: 'Compléter 50 exercices', unlocked: true, date: '1 janvier 2026' },
-    { emoji: '📚', title: 'Maître des maths', description: 'Finir tous les chapitres de maths', unlocked: false, progress: 75 },
-    { emoji: '🎯', title: 'Quiz master', description: 'Réussir 20 quiz', unlocked: false, progress: 60 },
-    { emoji: '🌟', title: 'Élève modèle', description: 'Atteindre le niveau 10', unlocked: false, progress: 80 },
-  ];
+  const [achievements, setAchievements] = useState([]);
+  const [stats, setStats] = useState([]);
+  const [recentActivity, setRecentActivity] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const stats = [
-    { label: 'Cours terminés', value: 45, icon: '📚', color: 'bg-blue-500' },
-    { label: 'Exercices réussis', value: 123, icon: '✏️', color: 'bg-green-500' },
-    { label: 'Quiz complétés', value: 12, icon: '🎯', color: 'bg-purple-500' },
-    { label: 'Points totaux', value: 2450, icon: '⭐', color: 'bg-yellow-500' },
-  ];
+  useEffect(() => {
+    let mounted = true;
+    setLoading(true);
+    async function load() {
+      try {
+        const profile = await api.users.getProfile();
+        if (mounted && profile) {
+          // Optionally sync displayed user information from profile
+        }
+      } catch (e) {}
 
-  const recentActivity = [
-    { date: 'Aujourd\'hui', activities: ['Cours: Les fractions', 'Exercice: Pythagore', 'Quiz: Grammaire'] },
-    { date: 'Hier', activities: ['Cours: La photosynthèse', 'Quiz: Les fractions'] },
-    { date: '3 janvier', activities: ['Cours: Histoire de France', 'Exercice: Pourcentages'] },
-  ];
+      try {
+        const s = await api.users.getStats();
+        if (mounted && s) {
+          setStats([
+            { label: 'Cours terminés', value: s.coursesCompleted || 0, icon: '📚', color: 'bg-blue-500' },
+            { label: 'Exercices réussis', value: s.exercisesPassed || 0, icon: '✏️', color: 'bg-green-500' },
+            { label: 'Quiz complétés', value: s.quizzesCompleted || 0, icon: '🎯', color: 'bg-purple-500' },
+            { label: 'Points totaux', value: s.totalXp || 0, icon: '⭐', color: 'bg-yellow-500' },
+          ]);
+        }
+      } catch (e) {}
+
+      try {
+        const ach = await api.users.getAchievements();
+        if (mounted && Array.isArray(ach)) setAchievements(ach);
+      } catch (e) {}
+
+      try {
+        const act = await api.users.getActivity();
+        if (mounted && act && Array.isArray(act.items)) setRecentActivity(act.items);
+      } catch (e) {}
+      setLoading(false);
+    }
+    load();
+    return () => { mounted = false; };
+  }, []);
 
   return (
     <div className="min-h-screen">
       <AppNav currentPage="profil" onNavigate={onNavigate} />
-      
-      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+      {loading ? (
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 text-center">Chargement...</div>
+      ) : (
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
         {/* Header */}
         <div className={`mb-8 md:mb-10 transform transition-all duration-700 ${animateCards ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-gray-900 mb-3 flex items-center gap-3">
@@ -227,6 +251,7 @@ export function ProfilePage({ onNavigate, onLogout }) {
           </div>
         </div>
       </div>
+      )}
     </div>
   );
 }

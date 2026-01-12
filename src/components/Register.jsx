@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { User, Mail, Lock, Eye, EyeOff, UserCheck } from 'lucide-react';
+import api from '../lib/api';
 
 export function Register({ onRegister, onSwitchToLogin }) {
   const [formData, setFormData] = useState({
@@ -19,26 +20,14 @@ export function Register({ onRegister, onSwitchToLogin }) {
     setError('');
 
     try {
-      const response = await fetch('http://localhost:5000/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('user', JSON.stringify(data.user));
-        localStorage.setItem('userRole', data.user.role);
-        onRegister(data.user);
-      } else {
-        setError(data.message || 'Erreur d\'inscription');
-      }
+      const data = await api.auth.register(formData);
+      localStorage.setItem('token', data.token);
+      if (data.refreshToken) localStorage.setItem('refreshToken', data.refreshToken);
+      localStorage.setItem('user', JSON.stringify(data.user));
+      localStorage.setItem('userRole', data.user.role);
+      onRegister(data.user);
     } catch (err) {
-      setError('Erreur de réseau. Vérifiez votre connexion.');
+      setError(err.message || 'Erreur de réseau. Vérifiez votre connexion.');
     } finally {
       setIsLoading(false);
     }

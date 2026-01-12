@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { AppNav } from './AppNav';
 import { useNotification } from './NotificationProvider';
 import { Check, X, ArrowRight, Star, Trophy, RotateCcw } from 'lucide-react';
+import api from '../lib/api';
 import StreakPopup from './StreakPopup';
 
 export function ExercisePage({ onNavigate, onLogout }) {
@@ -19,29 +20,23 @@ export function ExercisePage({ onNavigate, onLogout }) {
     newAchievement: null,
   });
 
-  const exercises = [
-    {
-      question: 'Combien font 1/2 + 1/4 ?',
-      emoji: '🔢',
-      options: ['1/6', '2/6', '3/4', '1/3'],
-      correct: 2,
-      explanation: 'Pour additionner des fractions, il faut avoir le même dénominateur. 1/2 = 2/4, donc 2/4 + 1/4 = 3/4',
-    },
-    {
-      question: 'Dans un triangle rectangle, quel est le nom du côté le plus long ?',
-      emoji: '📐',
-      options: ['Le côté adjacent', 'L\'hypoténuse', 'Le côté opposé', 'La base'],
-      correct: 1,
-      explanation: 'L\'hypoténuse est toujours le côté le plus long d\'un triangle rectangle. C\'est le côté opposé à l\'angle droit.',
-    },
-    {
-      question: 'Combien font 25% de 80 ?',
-      emoji: '💯',
-      options: ['15', '20', '25', '30'],
-      correct: 1,
-      explanation: '25% = 1/4, donc 80 ÷ 4 = 20',
-    },
-  ];
+  const [exercises, setExercises] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+    async function load() {
+      try {
+        const data = await api.exercises.getAll();
+        if (mounted && Array.isArray(data)) setExercises(data);
+      } catch (e) {
+        // keep sample UI when API fails
+      }
+      setLoading(false);
+    }
+    load();
+    return () => { mounted = false; };
+  }, []);
 
   const handleAnswer = (index) => {
     if (showResult) return;
@@ -64,7 +59,18 @@ export function ExercisePage({ onNavigate, onLogout }) {
       const newStreak = Math.floor(Math.random() * 10) + 2;
       const achievements = ['Maître des Exercices ! (100 exercices complétés)', 'Parfait ! (5 exercices à 100%)', 'Persévérance ! (Streak de 7 jours)'];
       const randomAchievement = achievements[Math.floor(Math.random() * achievements.length)];
-      
+      // attempt to submit attempt to backend when we have an exercise id
+      (async () => {
+        try {
+          const possibleId = exercises?.id || exercises?.exerciseId || exercises[currentExercise]?.exerciseId || exercises[currentExercise]?.id;
+          if (possibleId) {
+            await api.exercises.submitAttempt(possibleId, { score, totalQuestions: exercises.length });
+          }
+        } catch (e) {
+          // ignore submit errors
+        }
+      })();
+
       notification.success(`Exercices terminés! Score: ${score}/${exercises.length} 🏆`, { duration: 3000 });
       
       setStreakData({
@@ -91,26 +97,30 @@ export function ExercisePage({ onNavigate, onLogout }) {
     <div className={`min-h-screen ${showPopup ? 'blur-sm' : ''}`}>
       <AppNav currentPage="exercices" onNavigate={onNavigate} onLogout={onLogout} />
 
-      <StreakPopup 
-        isOpen={showPopup}
-        onClose={() => {
-          setShowPopup(false);
-          setCurrentExercise(0);
-          setSelectedAnswer(null);
-          setShowResult(false);
-          setScore(0);
-          onNavigate('dashboard');
-        }}
-        streakCount={streakData.streak}
-        score={streakData.score}
-        totalQuestions={streakData.totalQuestions}
-        newAchievement={streakData.newAchievement}
-      />
-      
       <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
-        {/* Header */}
-        <div className="mb-8 md:mb-10 animate-fadeInDown">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-gray-900 mb-3 flex items-center gap-3\">
+        {loading ? (
+          <div className="text-center">Chargement des exercices...</div>
+        ) : (
+          <>
+            <StreakPopup 
+              isOpen={showPopup}
+              onClose={() => {
+                setShowPopup(false);
+                setCurrentExercise(0);
+                setSelectedAnswer(null);
+                setShowResult(false);
+                setScore(0);
+                onNavigate('dashboard');
+              }}
+              streakCount={streakData.streak}
+              score={streakData.score}
+              totalQuestions={streakData.totalQuestions}
+              newAchievement={streakData.newAchievement}
+            />
+
+            {/* Header */}
+            <div className="mb-8 md:mb-10 animate-fadeInDown">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-gray-900 mb-3 flex items-center gap-3">
             <Check className="w-10 h-10 md:w-12 md:h-12 text-green-600" />
             Practice Arena
           </h1>
@@ -226,6 +236,8 @@ export function ExercisePage({ onNavigate, onLogout }) {
             </div>
           </div>
         </div>
+          </>
+        )}
       </div>
     </div>
   );

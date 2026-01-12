@@ -1,5 +1,7 @@
 import { Home, BookOpen, FileEdit, Brain, User, LogOut, Trophy } from 'lucide-react';
 import { useState } from 'react';
+import api from '../lib/api';
+import { useNotification } from './NotificationProvider';
 
 export function AppNav({ currentPage, onNavigate, onLogout }) {
   const [hoverItem, setHoverItem] = useState(null);
@@ -11,6 +13,22 @@ export function AppNav({ currentPage, onNavigate, onLogout }) {
     { id: 'leaderboard', icon: Trophy, label: '🏆 Leaderboard', color: 'bg-yellow-500' },
     { id: 'profil', icon: User, label: '👤 Profile', color: 'bg-pink-500' },
   ];
+
+  const notification = useNotification();
+
+  const handleLogout = async () => {
+    try {
+      await api.auth.logout();
+    } catch (e) {
+      // ignore server errors
+    }
+    localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('user');
+    localStorage.removeItem('userRole');
+    notification.info('Déconnecté');
+    onLogout && onLogout();
+  };
 
   return (
     <nav className="bg-white shadow-lg sticky top-0 z-50 backdrop-blur-sm bg-opacity-95">
@@ -52,7 +70,7 @@ export function AppNav({ currentPage, onNavigate, onLogout }) {
 
           {/* Logout */}
           <button 
-            onClick={onLogout}
+            onClick={handleLogout}
             className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-300 font-bold hover:shadow-md"
           >
             <LogOut className="w-4 h-4 transition-transform duration-300 hover:rotate-180" />

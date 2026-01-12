@@ -1,60 +1,101 @@
 import { useState, useEffect } from 'react';
 import { AppNav } from './AppNav';
 import { ChevronRight, Play, CheckCircle, Lock, Star, Clock, BookOpen } from 'lucide-react';
+import api from '../lib/api';
+import { useNotification } from './NotificationProvider';
+import { useGame } from '../contexts/GameContext';
 
 export function CoursePage({ onNavigate, onLogout }) {
-  const [selectedSubject, setSelectedSubject] = useState('math');
+  const [selectedSubject, setSelectedSubject] = useState(null);
   const [selectedChapter, setSelectedChapter] = useState(null);
   const [animateCards, setAnimateCards] = useState(false);
+  const [subjects, setSubjects] = useState([]);
+  const [chapters, setChapters] = useState({});
+  const [lessonsByChapter, setLessonsByChapter] = useState({});
 
   useEffect(() => {
     setAnimateCards(true);
   }, [selectedChapter]);
 
-  const subjects = [
-    { id: 'math', name: 'Mathématiques', emoji: '🔢', color: 'bg-blue-500' },
-    { id: 'french', name: 'Français', emoji: '📖', color: 'bg-purple-500' },
-    { id: 'science', name: 'Sciences', emoji: '🔬', color: 'bg-green-500' },
-    { id: 'history', name: 'Histoire', emoji: '🏛️', color: 'bg-orange-500' },
-  ];
+  useEffect(() => {
+    let mounted = true;
+    async function loadSubjects() {
+      try {
+        const subs = await api.courses.getAllSubjects();
+        if (mounted && Array.isArray(subs)) {
+          setSubjects(subs);
+          if (!selectedSubject && subs.length) setSelectedSubject(subs[0].id || subs[0].subjectId || subs[0].slug || subs[0].name);
+        }
+      } catch (e) {
+        // keep defaults if error
+      }
+    }
+    loadSubjects();
+    return () => { mounted = false; };
+  }, []);
 
-  const chapters = {
-    math: [
-      {
-        id: 1,
-        title: 'Les fractions',
-        lessons: [
-          { title: 'Qu\'est-ce qu\'une fraction ?', duration: '8 min', completed: true },
-          { title: 'Additionner des fractions', duration: '12 min', completed: true },
-          { title: 'Multiplier des fractions', duration: '10 min', completed: false },
-          { title: 'Diviser des fractions', duration: '15 min', completed: false, locked: true },
-        ],
-        progress: 50,
-      },
-      {
-        id: 2,
-        title: 'Le théorème de Pythagore',
-        lessons: [
-          { title: 'Introduction au théorème', duration: '10 min', completed: true },
-          { title: 'Calculer l\'hypoténuse', duration: '12 min', completed: false },
-          { title: 'Exercices pratiques', duration: '20 min', completed: false },
-        ],
-        progress: 33,
-      },
-      {
-        id: 3,
-        title: 'Les pourcentages',
-        lessons: [
-          { title: 'Comprendre les pourcentages', duration: '8 min', completed: false },
-          { title: 'Calculer un pourcentage', duration: '10 min', completed: false },
-          { title: 'Augmentation et réduction', duration: '12 min', completed: false },
-        ],
-        progress: 0,
-      },
-    ],
-  };
+  useEffect(() => {
+    let mounted = true;
+    async function loadChapters() {
+      if (!selectedSubject) return;
+      try {
+        const ch = await api.courses.getChaptersBySubject(selectedSubject);
+        if (mounted && ch) setChapters(prev => ({ ...prev, [selectedSubject]: ch }));
+      } catch (e) {}
+    }
+    loadChapters();
+    return () => { mounted = false; };
+  }, [selectedSubject]);
 
   const currentChapters = chapters[selectedSubject] || [];
+
+  const notification = useNotification();
+  const { completeLesson: localCompleteLesson } = useGame();
+  const [loadingLesson, setLoadingLesson] = useState(false);
+  const [lessonModal, setLessonModal] = useState({ open: false, content: null });
+
+  const handleCompleteLesson = async (lesson, chapterId, idx) => {
+    const lessonId = lesson?.id || lesson?.lessonId;
+    try {
+      if (lessonId) {
+        await api.courses.completeLesson(lessonId, {});
+      }
+      // update local game state
+      localCompleteLesson(lessonId || `${chapterId}-${idx}`, selectedSubject || 'unknown');
+      // update local UI state
+      setChapters(prev => {
+        const copied = { ...prev };
+        const list = (copied[selectedSubject] || []).map((c) => {
+          if (c.id !== chapterId) return c;
+          const newLessons = (c.lessons || []).map((l, i) => i === idx ? { ...l, completed: true } : l);
+          return { ...c, lessons: newLessons };
+        });
+        copied[selectedSubject] = list;
+        return copied;
+      });
+      notification.success('Leçon marquée comme complétée');
+    } catch (e) {
+      notification.error(e.message || 'Erreur lors de la complétion de la leçon');
+    }
+  };
+
+  const openLessonReview = async (lesson) => {
+    const lessonId = lesson?.id || lesson?.lessonId;
+    setLoadingLesson(true);
+    try {
+      if (lessonId) {
+        const data = await api.courses.getLessonById(lessonId);
+        setLessonModal({ open: true, content: data });
+      } else {
+        // fallback to local lesson data
+        setLessonModal({ open: true, content: lesson });
+      }
+    } catch (e) {
+      notification.error('Impossible de charger la leçon');
+    } finally {
+      setLoadingLesson(false);
+    }
+  };
 
   return (
     <div className="min-h-screen">
@@ -207,11 +248,20 @@ export function CoursePage({ onNavigate, onLogout }) {
                         </div>
 
                         {!lesson.locked && (
-                          <button className={`px-4 py-2 rounded-lg transition-all duration-300 font-semibold transform hover:scale-105 hover:shadow-md ${
-                            lesson.completed
-                              ? 'bg-gradient-to-r from-green-500 to-green-600 text-white hover:shadow-lg'
-                              : 'bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:shadow-lg'
-                          }`}>
+                          <button
+                            onClick={() => {
+                              if (lesson.completed) {
+                                openLessonReview(lesson);
+                              } else {
+                                handleCompleteLesson(lesson, selectedChapter, index);
+                              }
+                            }}
+                            className={`px-4 py-2 rounded-lg transition-all duration-300 font-semibold transform hover:scale-105 hover:shadow-md ${
+                              lesson.completed
+                                ? 'bg-gradient-to-r from-green-500 to-green-600 text-white hover:shadow-lg'
+                                : 'bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:shadow-lg'
+                            }`}
+                          >
                             {lesson.completed ? '👀 Revoir' : '▶️ Commencer'}
                           </button>
                         )}
@@ -219,6 +269,21 @@ export function CoursePage({ onNavigate, onLogout }) {
                     </div>
                   ))}
                 </div>
+
+                {/* Lesson Modal */}
+                {lessonModal.open && (
+                  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+                    <div className="bg-white rounded-2xl max-w-2xl w-full p-6">
+                      <div className="flex items-start justify-between mb-4">
+                        <h3 className="text-xl font-bold">{lessonModal.content?.title || 'Leçon'}</h3>
+                        <button onClick={() => setLessonModal({ open: false, content: null })} className="text-gray-500">Fermer</button>
+                      </div>
+                      <div className="prose max-w-none text-gray-700">
+                        {lessonModal.content?.body || lessonModal.content?.content || <p>Contenu indisponible</p>}
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Chapter Summary */}
                 <div className="mt-6 p-5 bg-gradient-to-br from-purple-100 to-pink-100 rounded-xl hover:shadow-lg transition-all duration-300 transform hover:scale-102">
