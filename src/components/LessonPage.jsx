@@ -1,11 +1,14 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { AppNav } from './AppNav';
 import api from '../lib/api';
 import { useNotification } from './NotificationProvider';
+import DOMPurify from 'dompurify';
+import logger from '../lib/logger';
 
 export default function LessonPage({ lessonId, onNavigate, onLogout }) {
   const [lesson, setLesson] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [startTime, setStartTime] = useState(null);
   const notification = useNotification();
 
   useEffect(() => {
@@ -15,6 +18,7 @@ export default function LessonPage({ lessonId, onNavigate, onLogout }) {
       try {
         const data = await api.courses.getLessonById(lessonId);
         if (mounted) setLesson(data);
+        if (mounted) setStartTime(Date.now());
       } catch (e) {
         notification.error('Impossible de charger la leçon');
       } finally {
@@ -28,7 +32,9 @@ export default function LessonPage({ lessonId, onNavigate, onLogout }) {
   const handleComplete = async () => {
     if (!lessonId) return;
     try {
-      await api.courses.completeLesson(lessonId, { timeSpent: 1 });
+      const elapsed = startTime ? Math.floor((Date.now() - startTime) / 1000) : 1;
+      const timeSpent = Math.max(1, elapsed);
+      await api.courses.completeLesson(lessonId, { timeSpent });
       notification.success('Leçon complétée !');
       onNavigate('cours');
     } catch (e) {
@@ -37,16 +43,13 @@ export default function LessonPage({ lessonId, onNavigate, onLogout }) {
     }
   };
 
-  // Basic HTML sanitizer to strip scripts and event handlers (suitable for trusted content)
   const sanitizeHtml = (html = '') => {
-    if (typeof html !== 'string') return '';
-    // remove script tags
-    let cleaned = html.replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '');
-    // remove on* attributes like onclick=, onload= etc.
-    cleaned = cleaned.replace(/\son[A-Za-z]+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, '');
-    // remove javascript: in href/src
-    cleaned = cleaned.replace(/(href|src)\s*=\s*("|')?javascript:[^"'>\s]*/gi, '');
-    return cleaned;
+    try {
+      return DOMPurify.sanitize(typeof html === 'string' ? html : '');
+    } catch (e) {
+      logger.error('Sanitize error', e);
+      return '';
+    }
   };
 
   return (

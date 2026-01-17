@@ -1,5 +1,7 @@
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:3000/api/v1';
 
+import logger from './logger';
+
 async function request(path, { method = 'GET', body, headers = {}, auth = false } = {}) {
   const opts = { method, headers: { ...headers } };
   // For GET requests from the frontend, prefer fresh responses to avoid 304 cached empty bodies
@@ -29,8 +31,8 @@ async function request(path, { method = 'GET', body, headers = {}, auth = false 
       const preview = await res.clone().text();
       // Truncate long bodies to keep console readable
       const short = preview.length > 2000 ? preview.slice(0, 2000) + '... (truncated)' : preview;
-      console.debug('[api] fetch', path, 'status=', res.status, 'content-type=', res.headers.get('content-type'));
-      console.debug('[api] response preview:', short);
+      logger.debug('[api] fetch', path, 'status=', res.status, 'content-type=', res.headers.get('content-type'));
+      logger.debug('[api] response preview:', short);
     } catch (e) {
       // ignore clone/text errors
     }

@@ -5,6 +5,7 @@ import { useGame } from '../contexts/GameContext';
 import { Play, Trophy, Clock, Star, Target, ArrowRight, ArrowLeft } from 'lucide-react';
 import StreakPopup from './StreakPopup';
 import api from '../lib/api';
+import logger from '../lib/logger';
 
 export function QuizPage({ onNavigate, onLogout }) {
   const [animateCards, setAnimateCards] = useState(false);
@@ -13,7 +14,7 @@ export function QuizPage({ onNavigate, onLogout }) {
   const { player, completeQuiz } = useGame();
 
   const [streakData, setStreakData] = useState({
-    streak: 5,
+    streak: 0,
     score: 0,
     totalQuestions: 0,
     newAchievement: null,
@@ -35,7 +36,7 @@ export function QuizPage({ onNavigate, onLogout }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    console.debug('QuizPage state', { showPopup, selectedQuiz, loading });
+    logger.debug('QuizPage state', { showPopup, selectedQuiz, loading });
   }, [showPopup, selectedQuiz, loading]);
 
   useEffect(() => {
@@ -287,7 +288,7 @@ export function QuizPage({ onNavigate, onLogout }) {
                           <div className="space-y-3 mb-4">
                             {[
                               { label: 'Questions', value: `${(quiz.questions ?? quiz.question_count ?? 0)} questions` },
-                              { label: 'Durée', value: quiz.duration, icon: Clock },
+                              { label: 'Durée', value: `${quiz.estimated_duration} min`, icon: Clock },
                             ].map((item, idx) => (
                               <div key={idx} className="flex items-center justify-between text-sm hover:bg-gray-50 p-2 rounded-lg transition-colors duration-200">
                                 <span className="text-gray-600 font-semibold">{item.label}</span>
@@ -308,7 +309,7 @@ export function QuizPage({ onNavigate, onLogout }) {
                               e.stopPropagation();
                               startQuiz(quiz);
                             }}
-                            className={`w-full py-3 bg-gradient-to-r ${quiz.color} text-white rounded-xl hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-2 font-black transform hover:scale-105 border-2 border-white/20`}
+                            className={`w-full py-3 bg-gradient-to-r ${quiz.color} rounded-xl hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-2 font-black transform hover:scale-105 border-2 border-white/20`}
                           >
                             <Play className="w-5 h-5" />
                             {ctaLabel}

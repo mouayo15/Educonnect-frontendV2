@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { AppNav } from './AppNav';
 import { ChevronRight, Play, CheckCircle, Lock, Star, Clock, BookOpen } from 'lucide-react';
 import api from '../lib/api';
+import logger from '../lib/logger';
 import { useNotification } from './NotificationProvider';
 import { useGame } from '../contexts/GameContext';
 
@@ -40,7 +41,7 @@ export function CoursePage({ onNavigate, onLogout }) {
       if (!selectedSubject) return;
       try {
         const ch = await api.courses.getChaptersBySubject(selectedSubject);
-        if (mounted) console.debug('courses.getChaptersBySubject', selectedSubject, ch);
+        if (mounted) logger.debug('courses.getChaptersBySubject', selectedSubject, ch);
         if (mounted && Array.isArray(ch)) {
           const normalized = await Promise.all(ch.map(async (c) => {
             const base = {
@@ -79,7 +80,7 @@ export function CoursePage({ onNavigate, onLogout }) {
 
   const handleCompleteLesson = async (lesson, chapterId, idx) => {
     const lessonId = lesson?.id || lesson?.lessonId;
-    console.debug('handleCompleteLesson called', { lesson, lessonId, chapterId, idx });
+    logger.debug('handleCompleteLesson called', { lesson, lessonId, chapterId, idx });
     try {
       if (lessonId) {
         // Send a minimal timeSpent to satisfy backend validation

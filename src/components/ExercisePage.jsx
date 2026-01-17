@@ -4,6 +4,7 @@ import { useNotification } from './NotificationProvider';
 import { Check, X, ArrowRight, Star, Trophy, RotateCcw } from 'lucide-react';
 import api from '../lib/api';
 import StreakPopup from './StreakPopup';
+import logger from '../lib/logger';
 
 export function ExercisePage({ onNavigate, onLogout }) {
   const [currentExercise, setCurrentExercise] = useState(0);
@@ -14,7 +15,7 @@ export function ExercisePage({ onNavigate, onLogout }) {
   const [showPopup, setShowPopup] = useState(false);
   const notification = useNotification();
   const [streakData, setStreakData] = useState({
-    streak: 3,
+    streak: 0,
     score: 0,
     totalQuestions: 0,
     newAchievement: null,
@@ -55,31 +56,37 @@ export function ExercisePage({ onNavigate, onLogout }) {
       setSelectedAnswer(null);
       setShowResult(false);
     } else {
-      // Show popup instead of just setting completed
-      const newStreak = Math.floor(Math.random() * 10) + 2;
-      const achievements = ['Maître des Exercices ! (100 exercices complétés)', 'Parfait ! (5 exercices à 100%)', 'Persévérance ! (Streak de 7 jours)'];
-      const randomAchievement = achievements[Math.floor(Math.random() * achievements.length)];
-      // attempt to submit attempt to backend when we have an exercise id
+      // submit attempt to backend when we have an exercise id
       (async () => {
         try {
           const possibleId = exercises?.id || exercises?.exerciseId || exercises[currentExercise]?.exerciseId || exercises[currentExercise]?.id;
+          let response = null;
           if (possibleId) {
-            await api.exercises.submitAttempt(possibleId, { score, totalQuestions: exercises.length });
+            response = await api.exercises.submitAttempt(possibleId, { score, totalQuestions: exercises.length });
           }
+          notification.success(`Exercices terminés! Score: ${score}/${exercises.length} 🏆`, { duration: 3000 });
+          // Use backend-provided streak/achievement if available, otherwise fallback to player data
+          const backendStreak = response?.streak || response?.data?.streak || 0;
+          const backendAchievement = response?.achievement || response?.data?.achievement || null;
+          setStreakData({
+            streak: backendStreak || 0,
+            score: score + (selectedAnswer === exercises[currentExercise].correct ? 1 : 0),
+            totalQuestions: exercises.length,
+            newAchievement: backendAchievement,
+          });
+          setShowPopup(true);
         } catch (e) {
-          // ignore submit errors
+          logger.error('Exercise submit error', e);
+          notification.success(`Exercices terminés! Score: ${score}/${exercises.length} 🏆`, { duration: 3000 });
+          setStreakData({
+            streak: 0,
+            score,
+            totalQuestions: exercises.length,
+            newAchievement: null,
+          });
+          setShowPopup(true);
         }
       })();
-
-      notification.success(`Exercices terminés! Score: ${score}/${exercises.length} 🏆`, { duration: 3000 });
-      
-      setStreakData({
-        streak: newStreak,
-        score: score + (selectedAnswer === exercises[currentExercise].correct ? 1 : 0),
-        totalQuestions: exercises.length,
-        newAchievement: randomAchievement,
-      });
-      setShowPopup(true);
     }
   };
 
