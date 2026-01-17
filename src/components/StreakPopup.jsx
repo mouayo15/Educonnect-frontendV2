@@ -1,136 +1,125 @@
-import { useState, useEffect } from 'react';
-import { X, Zap, Trophy, Sparkles } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { modalVariant, backdropVariant, confettiFall, popSmall } from '../lib/motionVariants';
+import React, { useState } from 'react';
+import { Flame } from 'lucide-react';
 
-export default function StreakPopup({ isOpen, onClose, streakCount = 5, newAchievement = null, score = 0, totalQuestions = 0, earnedXp = 0 }) {
-  const [xpProgress, setXpProgress] = useState(0);
-
-  useEffect(() => {
-    console.log('StreakPopup reçu:', { score, totalQuestions, earnedXp, streakCount });
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-      setXpProgress(0);
-      const timer = setTimeout(() => setXpProgress(100), 320);
-      return () => {
-        clearTimeout(timer);
-        document.body.style.overflow = 'auto';
-      };
+const styles = `
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
+  @keyframes scaleIn {
+    from { 
+      opacity: 0;
+      transform: scale(0.8);
     }
-  }, [isOpen]);
+    to { 
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+  
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  @keyframes spinSlow {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  
+  .animate-fadeIn {
+    animation: fadeIn 0.3s ease-out;
+  }
+  
+  .animate-scaleIn {
+    animation: scaleIn 0.4s ease-out;
+  }
+  
+  .animate-slideDown {
+    animation: slideDown 0.5s ease-out;
+  }
+  
+  .animate-slideUp {
+    animation: slideUp 0.5s ease-out 0.2s both;
+  }
+  
+  .animate-spin-slow {
+    animation: spinSlow 3s linear infinite;
+  }
+`;
 
-  const percentage = totalQuestions > 0 ? Math.round((score / totalQuestions) * 100) : 0;
-  const isPerfect = percentage === 100;
-  const isGreat = percentage >= 80;
-
-  const getStreakIcon = () => {
-    if (streakCount >= 10) return '🔥🔥🔥';
-    if (streakCount >= 5) return '🔥🔥';
-    return '🔥';
-  };
-
-  const getMotivationalMessage = () => {
-    if (isPerfect) return 'Parfait ! Tu es un génie ! 🧠';
-    if (isGreat) return 'Excellent travail ! 🌟';
-    return 'Bravo d\'avoir essayé ! 🎯';
-  };
-
+export default function StreakPopup({ streak = 7, onClose }) {
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <motion.div className="fixed inset-0 z-50 flex items-center justify-center w-screen h-screen overflow-hidden" initial="hidden" animate="visible" exit="exit">
-          <motion.div className="fixed inset-0 bg-black/60" variants={backdropVariant} onClick={onClose} />
-
-          {/* Confetti - animated with framer */}
-          {[...Array(22)].map((_, i) => {
-            const left = Math.random() * 100;
-            const rot = Math.random() * 720;
-            const delay = Math.random() * 0.6;
-            const emoji = ['🎉', '⭐', '✨', '🎊', '🏆'][Math.floor(Math.random() * 5)];
-            return (
-              <motion.div
-                key={i}
-                className="absolute text-2xl pointer-events-none"
-                style={{ left: `${left}%`, top: -20 }}
-                variants={confettiFall(left, rot, delay)}
-                initial="hidden"
-                animate="visible"
-              >
-                {emoji}
-              </motion.div>
-            );
-          })}
-
-          {/* Streak badge */}
-          <motion.div className="absolute top-12 left-1/2 -translate-x-1/2 pointer-events-none z-50" variants={popSmall} initial="hidden" animate="visible">
-            <div className="bg-gradient-to-br from-orange-400 via-red-400 to-pink-400 rounded-3xl p-6 shadow-2xl border-4 border-white/50 text-center max-w-xs w-80">
-              <div className="text-6xl mb-2 drop-shadow-lg">{getStreakIcon()}</div>
-              <div className="text-4xl font-black text-white mb-1">{streakCount}</div>
-              <div className="text-sm text-white/90 font-semibold">JOURS CONSÉCUTIFS</div>
+    <>
+      <style>{styles}</style>
+      
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fadeIn">
+        <div
+          className="bg-white rounded-3xl shadow-2xl p-8 mx-4 animate-scaleIn"
+          style={{ maxWidth: '28rem', width: 'min(92%, 28rem)' }}
+        >
+          <div className="text-center">
+            <div className="relative inline-block mb-6">
+              <div className="w-32 h-32 bg-gradient-to-br from-orange-400 to-red-500 rounded-full flex items-center justify-center animate-bounce">
+                <Flame className="w-16 h-16 text-white animate-pulse" />
+              </div>
+              <div className="absolute -top-2 -right-2 w-12 h-12 bg-yellow-400 rounded-full flex items-center justify-center animate-spin-slow">
+                <span className="text-2xl">✨</span>
+              </div>
             </div>
-          </motion.div>
-
-          {/* Main modal */}
-          <motion.div className="relative z-50 max-w-xl w-11/12" variants={modalVariant} initial="hidden" animate="visible" exit="exit">
-            <div className="bg-white rounded-3xl p-6 md:p-8 shadow-2xl border border-gray-100">
-              <button onClick={onClose} className="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-full transition-colors">
-                <X className="w-5 h-5 text-gray-500" />
-              </button>
-
-              <div className="text-center mb-4">
-                <div className="text-6xl mb-2 animate-bounce-slow">{isPerfect ? '🎉' : isGreat ? '🌟' : '💫'}</div>
-                <h2 className="text-2xl font-extrabold text-gray-900 mb-1">Quiz termine !</h2>
-                <p className="text-gray-600">{getMotivationalMessage()}</p>
-              </div>
-
-              {/* Score / Progress */}
-              <div className="bg-gray-50 rounded-2xl p-4 mb-4 border border-gray-100">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-gray-700 font-semibold">Score</span>
-                  <span className="text-2xl font-bold text-indigo-600">{percentage}%</span>
+            
+            <h2 className="text-4xl font-bold text-gray-800 mb-2 animate-slideDown">
+              {streak} Day Streak!
+            </h2>
+            <p className="text-gray-600 mb-6 text-lg animate-slideUp">
+              You're on fire! Keep it up! 🔥
+            </p>
+            
+            <div className="bg-gradient-to-r from-orange-100 to-red-100 rounded-2xl p-4 mb-6 animate-fadeIn">
+              <p className="text-orange-800 font-semibold mb-2">Streak Milestones</p>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-700">7 days</span>
+                  <span className="text-green-600 font-bold">✓ Unlocked!</span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-                  <div className="h-full bg-gradient-to-r from-indigo-500 to-pink-500 transition-all duration-700" style={{ width: `${percentage}%` }} />
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-700">30 days</span>
+                  <span className="text-gray-400">{30 - streak} days to go</span>
                 </div>
-                <div className="mt-2 text-xs text-gray-500">{score} correctes — {totalQuestions - score} incorrectes</div>
-              </div>
-
-              {/* Rewards */}
-              <div className="grid grid-cols-2 gap-3 mb-4">
-                <div className="bg-white rounded-xl p-3 text-center border border-gray-100">
-                  <div className="text-xs text-gray-500">XP Gagnés</div>
-                  <div className="text-xl font-bold text-indigo-600">+{earnedXp}</div>
-                </div>
-                <div className="bg-white rounded-xl p-3 text-center border border-gray-100">
-                  <div className="text-xs text-gray-500">Bonus</div>
-                  <div className="text-xl font-bold text-pink-600">+{streakCount * 10}</div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-700">100 days</span>
+                  <span className="text-gray-400">{100 - streak} days to go</span>
                 </div>
               </div>
-
-              {/* XP progress */}
-              <div className="mb-4">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2 text-sm text-gray-700 font-semibold">
-                    <Sparkles className="w-4 h-4 text-yellow-500" />
-                    XP Progress
-                  </div>
-                  <div className="text-sm font-bold text-yellow-600">{xpProgress}%</div>
-                </div>
-                <div className="w-full h-6 bg-yellow-50 rounded-full overflow-hidden border border-yellow-100">
-                  <div className="h-full bg-gradient-to-r from-yellow-400 to-orange-400 rounded-full transition-all duration-1200" style={{ width: `${xpProgress}%` }} />
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-3">
-                <button onClick={onClose} className="w-full py-3 bg-gradient-to-r from-indigo-600 to-pink-600 text-white rounded-xl font-bold shadow hover:shadow-lg transition-transform transform hover:scale-105">Continuer</button>
-                <button onClick={() => { onClose(); }} className="w-full py-3 bg-gray-100 rounded-xl font-semibold">Retour au tableau de bord</button>
-              </div>
-
-              <p className="text-center text-xs text-gray-400 mt-4">✨ Reviens demain pour augmenter ton streak ! ✨</p>
             </div>
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+            
+            <button
+              onClick={onClose}
+              className="w-full py-4 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-xl font-bold text-lg hover:from-orange-600 hover:to-red-600 transition-all transform hover:scale-105 shadow-lg"
+            >
+              LET'S GO!
+            </button>
+          </div>
+        </div>
+      </div>
+    </>
   );
 }
