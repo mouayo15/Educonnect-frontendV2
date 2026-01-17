@@ -35,6 +35,10 @@ export function QuizPage({ onNavigate, onLogout }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.debug('QuizPage state', { showPopup, selectedQuiz, loading });
+  }, [showPopup, selectedQuiz, loading]);
+
+  useEffect(() => {
     let mounted = true;
     async function load() {
       try {
@@ -185,9 +189,13 @@ export function QuizPage({ onNavigate, onLogout }) {
             // Update game context with backend values
             completeQuiz(selectedQuiz.id, backendScore, totalQuestions, difficulty);
             notification.success(`Quiz terminé ! +${xpEarned} XP`, { duration: 3000 });
+            // show the popup after we receive backend response
+            setShowPopup(true);
           }
         } catch (e) {
           console.error('Quiz submission error:', e);
+          // still show the popup even if submission failed
+          setShowPopup(true);
         }
       })();
       
@@ -204,7 +212,8 @@ export function QuizPage({ onNavigate, onLogout }) {
     }
 
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    setShowPopup(true);
+    // for already-completed branch, show popup here
+    if (alreadyCompleted) setShowPopup(true);
   };
 
   return (

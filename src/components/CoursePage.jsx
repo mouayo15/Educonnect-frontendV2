@@ -40,11 +40,27 @@ export function CoursePage({ onNavigate, onLogout }) {
       if (!selectedSubject) return;
       try {
         const ch = await api.courses.getChaptersBySubject(selectedSubject);
+        if (mounted) console.debug('courses.getChaptersBySubject', selectedSubject, ch);
         if (mounted && Array.isArray(ch)) {
-          const normalized = ch.map(c => ({
-            ...c,
-            lessons: Array.isArray(c?.lessons) ? c.lessons : [],
-            progress: typeof c?.progress === 'number' ? c.progress : 0
+          const normalized = await Promise.all(ch.map(async (c) => {
+            const base = {
+              ...c,
+              lessons: Array.isArray(c?.lessons) ? c.lessons : [],
+              progress: typeof c?.progress === 'number' ? c.progress : 0
+            };
+            // If backend returns empty lessons array but we have a chapter id, try fetching lessons explicitly
+            if ((!base.lessons || base.lessons.length === 0) && (c.id || c.chapterId)) {
+              try {
+                const chapterId = c.id || c.chapterId;
+                const lessons = await api.courses.getLessonsByChapter(chapterId);
+                if (Array.isArray(lessons) && lessons.length) {
+                  base.lessons = lessons;
+                }
+              } catch (e) {
+                // ignore per-chapter fetch errors
+              }
+            }
+            return base;
           }));
           setChapters(prev => ({ ...prev, [selectedSubject]: normalized }));
         }

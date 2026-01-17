@@ -80,22 +80,22 @@ export function ProfilePage({ onNavigate, onLogout }) {
             }`}
             style={{ transitionDelay: '0.1s' }}>
               <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-4xl mx-auto mb-4 hover:scale-110 transition-transform duration-300 animate-float">
-                👧
+                {authUser?.avatar || 'Utilisateur'}
               </div>
               
-              <h2 className="text-xl font-bold text-gray-900 mb-1">Sarah Martin</h2>
+              <h2 className="text-xl font-bold text-gray-900 mb-1">{authUser?.username || 'Utilisateur'}</h2>
               <p className="text-gray-600 mb-4 font-semibold">Classe de 5ème</p>
               
               <div className="flex items-center justify-center gap-2 mb-6">
                 <div className="px-3 py-1 bg-gradient-to-r from-yellow-400 to-orange-400 text-white rounded-full text-sm font-bold hover:shadow-lg transition-all duration-300 hover:scale-110 animate-bounce-slow">
-                  ⭐ Level 8
+                  ⭐ {authUser?.level || 'Level'}
                 </div>
               </div>
 
               <div className="space-y-3 text-sm text-left">
                 <div className="flex items-center gap-3 text-gray-600 hover:text-blue-600 transition-colors duration-300 font-semibold">
                   <Mail className="w-4 h-4" />
-                  <span>sarah.martin@email.com</span>
+                  <span>{authUser?.email || 'email@example.com'}</span>
                 </div>
                 <div className="flex items-center gap-3 text-gray-600 hover:text-purple-600 transition-colors duration-300 font-semibold">
                   <Calendar className="w-4 h-4" />
