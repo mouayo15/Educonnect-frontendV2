@@ -12,10 +12,12 @@ import { ExercisePage } from './components/ExercisePage';
 import { QuizPage } from './components/QuizPage';
 import { ProfilePage } from './components/ProfilePage';
 import { LeaderboardPage } from './components/LeaderboardPage';
+import LessonPage from './components/LessonPage';
 
 function AppContent() {
   const { user, isAuthenticated, loading, logout } = useAuth();
   const [currentPage, setCurrentPage] = useState('landing');
+  const [pageParams, setPageParams] = useState({});
   const [authMode, setAuthMode] = useState('login');
 
   // Check authentication status and set initial page
@@ -49,8 +51,9 @@ function AppContent() {
     setAuthMode('login');
   };
 
-  const handleNavigate = (page) => {
+  const handleNavigate = (page, params = {}) => {
     setCurrentPage(page);
+    setPageParams(params || {});
   };
 
   const handleStartAuth = (mode) => {
@@ -89,6 +92,7 @@ function AppContent() {
         <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
           {currentPage === 'dashboard' && <Dashboard onNavigate={handleNavigate} onLogout={handleLogout} />}
           {currentPage === 'cours' && <CoursePage onNavigate={handleNavigate} onLogout={handleLogout} />}
+          {currentPage === 'lesson' && <LessonPage lessonId={pageParams.lessonId} onNavigate={handleNavigate} onLogout={handleLogout} />}
           {currentPage === 'exercices' && <ExercisePage onNavigate={handleNavigate} onLogout={handleLogout} />}
           {currentPage === 'quiz' && <QuizPage onNavigate={handleNavigate} onLogout={handleLogout} />}
           {currentPage === 'leaderboard' && <LeaderboardPage onNavigate={handleNavigate} onLogout={handleLogout} />}
